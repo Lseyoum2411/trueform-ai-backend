@@ -1,10 +1,3 @@
-import os
-import sys
-
-# Linux-safe import environment for Railway deployment
-if sys.platform.startswith("linux"):
-    os.environ["OPENCV_VIDEOIO_PRIORITY_MSMF"] = "0"
-
 import cv2
 import mediapipe as mp
 import numpy as np
