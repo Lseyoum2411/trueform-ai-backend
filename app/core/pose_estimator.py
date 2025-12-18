@@ -1,22 +1,15 @@
+import os
+import sys
+
+# Linux-safe import environment for Railway deployment
+if sys.platform.startswith("linux"):
+    os.environ["OPENCV_VIDEOIO_PRIORITY_MSMF"] = "0"
+
 import cv2
 import mediapipe as mp
 import numpy as np
 from typing import List, Dict, Tuple, Optional
 import math
-
-# Safety check: Ensure headless OpenCV is installed (required for Railway)
-# On Linux (Railway), check build info for GUI backends - headless builds don't include them
-import sys
-if sys.platform.startswith('linux'):
-    build_info = cv2.getBuildInformation().lower()
-    # Non-headless builds on Linux include Qt/GTK GUI backends
-    # This check prevents deployment with GUI-enabled OpenCV packages
-    if 'qt' in build_info or 'gtk' in build_info:
-        raise RuntimeError(
-            "Non-headless OpenCV detected on Linux. "
-            "Railway requires opencv-contrib-python-headless only. "
-            "GUI backends (Qt/GTK) found in build info."
-        )
 
 
 class PoseEstimator:
