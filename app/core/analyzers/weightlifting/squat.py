@@ -85,3 +85,4 @@ class SquatAnalyzer(BaseLiftAnalyzer):
 
 
 
+

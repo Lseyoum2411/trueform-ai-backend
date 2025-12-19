@@ -38,3 +38,4 @@ class WeightliftingAnalyzer(BaseAnalyzer):
 
 
 
+
