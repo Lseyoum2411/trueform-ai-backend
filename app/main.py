@@ -25,8 +25,11 @@ os.makedirs(settings.RESULTS_DIR, exist_ok=True)
 
 
 @app.get("/")
-async def root():
-    return {"message": "TrueForm AI API", "version": "1.0.0"}
+def root():
+    return {
+        "status": "ok",
+        "service": "trueform-ai-backend"
+    }
 
 
 @app.get("/health")
