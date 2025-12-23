@@ -1,0 +1,67 @@
+warning: in the working copy of 'app/main.py', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/app/main.py b/app/main.py[m
+[1mindex 14be579..9763528 100644[m
+[1m--- a/app/main.py[m
+[1m+++ b/app/main.py[m
+[36m@@ -6,9 +6,10 @@[m [mCorrect lifecycle structure for Railway deployment[m
+ [m
+ import os[m
+ import logging[m
+[31m-from fastapi import FastAPI[m
+[31m-from fastapi.responses import JSONResponse[m
+[32m+[m[32mfrom fastapi import FastAPI, Request[m
+[32m+[m[32mfrom fastapi.responses import PlainTextResponse[m
+ from fastapi.middleware.cors import CORSMiddleware[m
+[32m+[m[32mfrom starlette.responses import Response as StarletteResponse[m
+ [m
+ # ------------------------------------------------------------------[m
+ # Logging (lightweight)[m
+[36m@@ -40,28 +41,32 @@[m [mapp = FastAPI([m
+ )[m
+ [m
+ # ------------------------------------------------------------------[m
+[31m-# Root + Health (MUST be instant for Railway)[m
+[32m+[m[32m# Debug middleware (temporary - logs request/response flow)[m
+ # ------------------------------------------------------------------[m
+ [m
+[31m-@app.get("/", response_class=JSONResponse)[m
+[32m+[m[32m@app.middleware("http")[m
+[32m+[m[32masync def debug_middleware(request: Request, call_next):[m
+[32m+[m[32m    print(f"→ Request: {request.method} {request.url.path}")[m
+[32m+[m[32m    try:[m
+[32m+[m[32m        response = await call_next(request)[m
+[32m+[m[32m        print(f"← Response: {response.status_code}")[m
+[32m+[m[32m        return response[m
+[32m+[m[32m    except Exception as e:[m
+[32m+[m[32m        print(f"✗ Middleware error: {e}")[m
+[32m+[m[32m        return StarletteResponse(content="ERROR", status_code=500, media_type="text/plain")[m
+[32m+[m
+[32m+[m[32m# ------------------------------------------------------------------[m
+[32m+[m[32m# Root + Health (MUST be instant for Railway - PlainTextResponse)[m
+[32m+[m[32m# ------------------------------------------------------------------[m
+[32m+[m
+[32m+[m[32m@app.get("/", response_class=PlainTextResponse)[m
+ async def root():[m
+[31m-    return {[m
+[31m-        "status": "online",[m
+[31m-        "service": "TrueForm AI",[m
+[31m-        "version": "1.0.0",[m
+[31m-        "port": PORT,[m
+[31m-        "docs": "/docs",[m
+[31m-        "health": "/health",[m
+[31m-    }[m
+[32m+[m[32m    return "OK"[m
+ [m
+ [m
+[31m-@app.get("/health", response_class=JSONResponse)[m
+[32m+[m[32m@app.get("/health", response_class=PlainTextResponse)[m
+ async def health():[m
+[31m-    return {[m
+[31m-        "status": "healthy",[m
+[31m-        "version": "1.0.0",[m
+[31m-        "port": PORT,[m
+[31m-    }[m
+[32m+[m[32m    return "OK"[m
+ [m
+ # ------------------------------------------------------------------[m
+ # Load config + register middleware + routers (BEFORE startup)[m
