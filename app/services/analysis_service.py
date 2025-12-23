@@ -41,9 +41,24 @@ WEIGHTLIFTING_METRIC_NORMALIZATION = {
 
 class AnalysisService:
     def __init__(self):
-        self.basketball_analyzer = BasketballAnalyzer()
-        self.weightlifting_analyzer = WeightliftingAnalyzer()
+        # Lazy-load analyzers (don't instantiate ML models at import time)
+        self._basketball_analyzer = None
+        self._weightlifting_analyzer = None
         self._ensure_results_directory()
+    
+    @property
+    def basketball_analyzer(self):
+        """Lazy-load basketball analyzer on first use."""
+        if self._basketball_analyzer is None:
+            self._basketball_analyzer = BasketballAnalyzer()
+        return self._basketball_analyzer
+    
+    @property
+    def weightlifting_analyzer(self):
+        """Lazy-load weightlifting analyzer on first use."""
+        if self._weightlifting_analyzer is None:
+            self._weightlifting_analyzer = WeightliftingAnalyzer()
+        return self._weightlifting_analyzer
     
     def _ensure_results_directory(self):
         """Ensure results directory exists for saving analysis history."""
