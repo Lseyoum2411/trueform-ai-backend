@@ -147,6 +147,21 @@ async def upload_video(
             detail=f"Video duration exceeds {settings.MAX_VIDEO_DURATION_SEC} seconds"
         )
     
+    # Check rate limit before queuing analysis
+    from app.utils.rate_limiter import can_start_analysis
+    if not can_start_analysis(video_id):
+        os.remove(file_path)  # Clean up uploaded file
+        raise HTTPException(
+            status_code=429,
+            detail="Analysis queue is full. Please try again later."
+        )
+    
+    update_video_status(video_id, "queued", progress=0.0)
+    logger.info(f"Video uploaded successfully, video_id: {video_id}, queued for background processing")
+    
+    # Build status polling URL for frontend
+    next_poll_url = f"{settings.API_PREFIX}/upload/status/{video_id}"
+    
     video_upload = VideoUpload(
         video_id=video_id,
         filename=filename,
@@ -156,10 +171,9 @@ async def upload_video(
         uploaded_at=datetime.now(),
         file_size=file_size,
         duration=duration,
+        status="queued",
+        next_poll_url=next_poll_url,
     )
-    
-    update_video_status(video_id, "queued", progress=0.0)
-    logger.info(f"Video uploaded successfully, video_id: {video_id}, queued for background processing")
     
     # Process analysis in background (non-blocking)
     background_tasks.add_task(process_video_analysis, video_id, file_path, sport, exercise_type)
