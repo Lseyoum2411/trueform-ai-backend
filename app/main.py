@@ -170,6 +170,11 @@ async def general_exception_handler(request: Request, exc: Exception):
 
 # ----------------------------------------------------
 # Startup event — Optional pre-warm (NO registration)
+# 
+# IMPORTANT: No heavy work allowed at import or startup.
+# - ML models (MediaPipe, OpenCV, analyzers) must be lazy-loaded
+# - Heavy imports must be deferred to request handlers or background tasks
+# - Startup event should only log, not initialize heavy resources
 # ----------------------------------------------------
 
 @app.on_event("startup")

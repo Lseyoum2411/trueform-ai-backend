@@ -107,20 +107,35 @@ async def upload_video(
     # Debug logging: log received form fields (for troubleshooting multipart issues)
     logger.info(f"Upload received - sport: {sport}, exercise_type: {exercise_type}, filename: {video.filename if video else 'MISSING'}")
     
+    # Validate sport
     if sport not in SUPPORTED_SPORTS:
-        raise HTTPException(status_code=400, detail=f"Unsupported sport: {sport}")
+        valid_sports = ", ".join(SUPPORTED_SPORTS)
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid sport '{sport}'. Supported sports: {valid_sports}"
+        )
     
+    # Validate exercise_type based on sport requirements
     if sport == "basketball":
         exercise_type = "jumpshot"
     elif sport in ["golf", "weightlifting"]:
         if not exercise_type:
-            raise HTTPException(status_code=400, detail=f"exercise_type required for {sport}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"exercise_type is required for {sport}. Valid options: {', '.join(EXERCISE_TYPES.get(sport, []))}"
+            )
         
+        # Handle aliases
         if exercise_type in EXERCISE_ALIASES:
             exercise_type = EXERCISE_ALIASES[exercise_type]
         
-        if exercise_type not in EXERCISE_TYPES.get(sport, []):
-            raise HTTPException(status_code=400, detail=f"Unsupported exercise_type '{exercise_type}' for sport '{sport}'")
+        # Validate exercise_type against sport
+        valid_exercises = EXERCISE_TYPES.get(sport, [])
+        if exercise_type not in valid_exercises:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid exercise_type '{exercise_type}' for sport '{sport}'. Valid options: {', '.join(valid_exercises)}"
+            )
     
     video_id = str(uuid.uuid4())
     file_extension = os.path.splitext(video.filename)[1]

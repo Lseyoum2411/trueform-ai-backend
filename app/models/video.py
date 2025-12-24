@@ -23,6 +23,7 @@ class VideoUploadResponse(BaseModel):
     duration: Optional[float] = None
     status: str = "queued"  # Always "queued" on upload
     next_poll_url: Optional[str] = None  # URL to poll for status
+    next_steps: str = "Video uploaded successfully. Poll the status endpoint to track analysis progress."  # User guidance
 
 
 # Backward compatibility alias
