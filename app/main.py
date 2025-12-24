@@ -90,6 +90,81 @@ except Exception as e:
     logger.error(f"Failed to load API router: {e}", exc_info=True)
 
 # ----------------------------------------------------
+# Error handlers (consistent error responses)
+# ----------------------------------------------------
+
+from fastapi.exceptions import RequestValidationError
+from app.models.error import ErrorResponse
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Handle HTTPException with consistent error format."""
+    from app.utils.request_id import get_request_id
+    request_id = get_request_id(request)
+    
+    # Map status codes to error codes
+    error_code_map = {
+        400: "BAD_REQUEST",
+        401: "UNAUTHORIZED",
+        403: "FORBIDDEN",
+        404: "NOT_FOUND",
+        413: "PAYLOAD_TOO_LARGE",
+        422: "VALIDATION_ERROR",
+        429: "TOO_MANY_REQUESTS",
+        500: "INTERNAL_SERVER_ERROR",
+    }
+    error_code = error_code_map.get(exc.status_code, f"HTTP_{exc.status_code}")
+    
+    error_response = ErrorResponse(
+        error_code=error_code,
+        message=exc.detail,
+        request_id=request_id,
+    )
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=error_response.model_dump(exclude_none=True),
+    )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Handle validation errors with consistent format."""
+    from app.utils.request_id import get_request_id
+    request_id = get_request_id(request)
+    
+    # Extract first error message
+    errors = exc.errors()
+    message = errors[0].get("msg", "Validation error") if errors else "Validation error"
+    
+    error_response = ErrorResponse(
+        error_code="VALIDATION_ERROR",
+        message=message,
+        request_id=request_id,
+        detail=str(errors) if len(errors) > 1 else None,
+    )
+    return JSONResponse(
+        status_code=422,
+        content=error_response.model_dump(exclude_none=True),
+    )
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    """Handle unexpected exceptions safely."""
+    from app.utils.request_id import get_request_id
+    request_id = get_request_id(request)
+    
+    logger.error(f"Unhandled exception: {exc}", exc_info=True, extra={"request_id": request_id})
+    
+    error_response = ErrorResponse(
+        error_code="INTERNAL_SERVER_ERROR",
+        message="An unexpected error occurred",
+        request_id=request_id,
+    )
+    return JSONResponse(
+        status_code=500,
+        content=error_response.model_dump(exclude_none=True),
+    )
+
+# ----------------------------------------------------
 # Startup event — Optional pre-warm (NO registration)
 # ----------------------------------------------------
 
