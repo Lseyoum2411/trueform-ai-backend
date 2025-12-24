@@ -12,6 +12,9 @@ from datetime import datetime
 import cv2
 from typing import Optional
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -26,6 +29,12 @@ def get_video_duration(video_path: str) -> float:
 
 
 async def process_video_analysis(video_id: str, video_path: str, sport: str, exercise_type: Optional[str]):
+    """
+    Background task to process video analysis.
+    Runs asynchronously via BackgroundTasks to avoid blocking upload response.
+    """
+    logger.info(f"Background analysis started for video_id: {video_id}, sport: {sport}, exercise_type: {exercise_type}")
+    
     try:
         update_video_status(video_id, "processing", progress=10.0)
         
@@ -33,6 +42,7 @@ async def process_video_analysis(video_id: str, video_path: str, sport: str, exe
             raise FileNotFoundError(f"Video file not found: {video_path}")
         
         update_video_status(video_id, "processing", progress=20.0)
+        logger.info(f"Video file found, initializing pose estimation for {video_id}")
         
         pose_estimator = PoseEstimator()
         update_video_status(video_id, "processing", progress=30.0)
@@ -41,8 +51,9 @@ async def process_video_analysis(video_id: str, video_path: str, sport: str, exe
         update_video_status(video_id, "processing", progress=60.0)
         
         if not pose_data:
-            raise ValueError("No pose data extracted from video. Make sure the video contains a person and is a valid video file.")
+            raise ValueError("No pose data extracted from video. Ensure person is visible and video is valid.")
         
+        logger.info(f"Pose data extracted ({len(pose_data)} frames), running analysis for {video_id}")
         service = AnalysisService()
         update_video_status(video_id, "processing", progress=70.0)
         
@@ -61,11 +72,19 @@ async def process_video_analysis(video_id: str, video_path: str, sport: str, exe
             json.dump(result.model_dump(mode='json'), f, default=str)
         
         update_video_status(video_id, "completed", progress=100.0, analysis_id=result.analysis_id)
+        logger.info(f"Analysis completed successfully for video_id: {video_id}, analysis_id: {result.analysis_id}")
         
     except Exception as e:
+        # Sanitize error message (no stack traces, no internal paths)
         error_msg = str(e)
+        # Remove file paths from error messages
+        if "\\" in error_msg or "/" in error_msg:
+            # Keep only the error type and descriptive message
+            error_type = type(e).__name__
+            error_msg = f"{error_type}: {error_msg.split(':', 1)[-1].strip()}" if ":" in error_msg else f"{error_type}: {error_msg}"
+        
         update_video_status(video_id, "error", progress=0.0, error=error_msg)
-        print(f"Error processing video {video_id}: {error_msg}")
+        logger.error(f"Analysis failed for video_id: {video_id}, error: {error_msg}", exc_info=True)
 
 
 @router.post("", response_model=VideoUpload)
@@ -130,7 +149,9 @@ async def upload_video(
     )
     
     update_video_status(video_id, "queued", progress=0.0)
+    logger.info(f"Video uploaded successfully, video_id: {video_id}, queued for background processing")
     
+    # Process analysis in background (non-blocking)
     background_tasks.add_task(process_video_analysis, video_id, file_path, sport, exercise_type)
     
     return video_upload
