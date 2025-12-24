@@ -26,12 +26,15 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
         request.state.request_id = request_id
         
         # Update logger context for this request
-        old_factory = logging.getLogRecordFactory()
-        def record_factory(*args, **kwargs):
-            record = old_factory(*args, **kwargs)
+        # Store the current factory BEFORE creating a new one to avoid recursion
+        current_factory = logging.getLogRecordFactory()
+        
+        def record_factory_with_request_id(*args, **kwargs):
+            record = current_factory(*args, **kwargs)
             record.request_id = request_id
             return record
-        logging.setLogRecordFactory(record_factory)
+        
+        logging.setLogRecordFactory(record_factory_with_request_id)
         
         try:
             response = await call_next(request)
@@ -39,9 +42,8 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
             response.headers["X-Request-ID"] = request_id
             return response
         finally:
-            # Restore to default factory from main.py (which adds 'startup' as default)
-            from app.main import default_record_factory
-            logging.setLogRecordFactory(default_record_factory)
+            # Restore to the factory that was active before this request
+            logging.setLogRecordFactory(current_factory)
 
 
 def get_request_id(request: Request) -> str:
