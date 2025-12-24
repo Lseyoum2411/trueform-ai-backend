@@ -39,8 +39,9 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
             response.headers["X-Request-ID"] = request_id
             return response
         finally:
-            # Restore original factory
-            logging.setLogRecordFactory(old_factory)
+            # Restore to default factory from main.py (which adds 'startup' as default)
+            from app.main import default_record_factory
+            logging.setLogRecordFactory(default_record_factory)
 
 
 def get_request_id(request: Request) -> str:

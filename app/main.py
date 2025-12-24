@@ -9,15 +9,19 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - [request_id=%(request_id)s] - %(message)s",
 )
-logger = logging.getLogger(__name__)
 
-# Set default request_id for logs before middleware runs
+# Store original factory BEFORE overriding it to prevent recursion
+_original_log_record_factory = logging.getLogRecordFactory()
+
 def default_record_factory(*args, **kwargs):
-    record = logging.getLogRecordFactory()(*args, **kwargs)
+    """Custom LogRecord factory that adds request_id field."""
+    record = _original_log_record_factory(*args, **kwargs)
     if not hasattr(record, 'request_id'):
         record.request_id = 'startup'
     return record
+
 logging.setLogRecordFactory(default_record_factory)
+logger = logging.getLogger(__name__)
 
 PORT = int(os.getenv("PORT", 8000))
 logger.info(f"TrueForm AI initializing on port {PORT}")
