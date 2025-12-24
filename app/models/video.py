@@ -43,13 +43,3 @@ class VideoStatusResponse(BaseModel):
 # Legacy alias for backward compatibility
 VideoStatus = VideoStatusResponse
 
-
-class VideoStatusResponse(BaseModel):
-    video_id: str
-    status: VideoStatusEnum
-    progress: Optional[float] = None
-    analysis_id: Optional[str] = None
-    error: Optional[str] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse
-from app.models.video import VideoUpload, VideoStatus
+from app.models.video import VideoUpload, VideoStatusResponse
 from app.models.analysis import AnalysisResult
 from app.services.analysis_service import AnalysisService
 from app.config import settings, SUPPORTED_SPORTS, EXERCISE_TYPES, EXERCISE_ALIASES
