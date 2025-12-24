@@ -33,6 +33,14 @@ async def process_video_analysis(video_id: str, video_path: str, sport: str, exe
     Background task to process video analysis.
     Runs asynchronously via BackgroundTasks to avoid blocking upload response.
     """
+    # Check rate limit before starting
+    if not can_start_analysis(video_id):
+        error_msg = "Analysis queue is full. Please try again later."
+        update_video_status(video_id, "error", progress=0.0, error=error_msg)
+        logger.warning(f"Analysis rejected due to rate limit for {video_id}")
+        return
+    
+    start_analysis(video_id)
     logger.info(f"Background analysis started for video_id: {video_id}, sport: {sport}, exercise_type: {exercise_type}")
     
     try:
@@ -73,6 +81,7 @@ async def process_video_analysis(video_id: str, video_path: str, sport: str, exe
         
         update_video_status(video_id, "completed", progress=100.0, analysis_id=result.analysis_id)
         logger.info(f"Analysis completed successfully for video_id: {video_id}, analysis_id: {result.analysis_id}")
+        finish_analysis(video_id)
         
     except Exception as e:
         # Sanitize error message (no stack traces, no internal paths)
@@ -85,6 +94,7 @@ async def process_video_analysis(video_id: str, video_path: str, sport: str, exe
         
         update_video_status(video_id, "error", progress=0.0, error=error_msg)
         logger.error(f"Analysis failed for video_id: {video_id}, error: {error_msg}", exc_info=True)
+        finish_analysis(video_id)
 
 
 @router.post("", response_model=VideoUpload)
@@ -157,11 +167,34 @@ async def upload_video(
     return video_upload
 
 
-@router.get("/status/{video_id}", response_model=VideoStatus)
+@router.get("/status/{video_id}", response_model=VideoStatusResponse)
 async def get_status(video_id: str):
+    """
+    Get video processing status.
+    
+    Returns current status (queued | processing | completed | error) and progress.
+    """
     if video_id not in video_statuses:
         raise HTTPException(status_code=404, detail="Video not found")
-    return video_statuses[video_id]
+    
+    # Convert status dict to VideoStatusResponse model
+    status_data = video_statuses[video_id]
+    from app.models.video import VideoStatusEnum
+    
+    try:
+        status_enum = VideoStatusEnum(status_data.get("status", "queued"))
+    except ValueError:
+        status_enum = VideoStatusEnum.QUEUED
+    
+    return VideoStatusResponse(
+        video_id=video_id,
+        status=status_enum,
+        progress=status_data.get("progress"),
+        analysis_id=status_data.get("analysis_id"),
+        error=status_data.get("error"),
+        created_at=status_data.get("created_at"),
+        updated_at=status_data.get("updated_at"),
+    )
 
 
 @router.get("/results/{video_id}", response_model=AnalysisResult)
