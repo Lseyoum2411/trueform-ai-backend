@@ -75,6 +75,9 @@ async def upload_video(
     sport: str = Form(...),
     exercise_type: Optional[str] = Form(None),
 ):
+    # Debug logging: log received form fields (for troubleshooting multipart issues)
+    logger.info(f"Upload received - sport: {sport}, exercise_type: {exercise_type}, filename: {video.filename if video else 'MISSING'}")
+    
     if sport not in SUPPORTED_SPORTS:
         raise HTTPException(status_code=400, detail=f"Unsupported sport: {sport}")
     
