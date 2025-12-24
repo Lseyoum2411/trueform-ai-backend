@@ -1,15 +1,23 @@
 import os
 import logging
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import Response as StarletteResponse
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    format="%(asctime)s - %(name)s - %(levelname)s - [request_id=%(request_id)s] - %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+# Set default request_id for logs before middleware runs
+def default_record_factory(*args, **kwargs):
+    record = logging.getLogRecordFactory()(*args, **kwargs)
+    if not hasattr(record, 'request_id'):
+        record.request_id = 'startup'
+    return record
+logging.setLogRecordFactory(default_record_factory)
 
 PORT = int(os.getenv("PORT", 8000))
 logger.info(f"TrueForm AI initializing on port {PORT}")
@@ -27,8 +35,14 @@ app = FastAPI(
 # Logs request/response and fails open
 # ----------------------------------------------------
 
+# Request ID middleware (must be first)
+from app.utils.request_id import RequestIDMiddleware
+app.add_middleware(RequestIDMiddleware)
+
 @app.middleware("http")
 async def debug_middleware(request: Request, call_next):
+    from app.utils.request_id import get_request_id
+    request_id = get_request_id(request)
     logger.info(f"→ Request: {request.method} {request.url.path}")
     try:
         response = await call_next(request)
