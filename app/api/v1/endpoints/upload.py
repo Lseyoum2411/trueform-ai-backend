@@ -188,6 +188,7 @@ async def upload_video(
         duration=duration,
         status="queued",
         next_poll_url=next_poll_url,
+        next_steps=f"Video uploaded successfully. Poll {next_poll_url} to track analysis progress. Status will change from 'queued' to 'processing' to 'completed'.",
     )
     
     # Process analysis in background (non-blocking)
