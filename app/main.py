@@ -93,6 +93,21 @@ try:
 except Exception as e:
     logger.error(f"Failed to load API router: {e}", exc_info=True)
 
+# Serve uploaded videos (for frontend video playback)
+try:
+    from fastapi.staticfiles import StaticFiles
+    from app.config import settings
+    import os
+    
+    # Ensure uploads directory exists
+    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+    
+    # Mount static files for video serving
+    app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
+    logger.info(f"✓ Video uploads directory mounted at /uploads")
+except Exception as e:
+    logger.warning(f"Could not mount uploads directory: {e}", exc_info=True)
+
 # ----------------------------------------------------
 # Error handlers (consistent error responses)
 # ----------------------------------------------------

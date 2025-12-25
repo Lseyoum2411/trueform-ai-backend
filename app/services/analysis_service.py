@@ -271,6 +271,29 @@ class AnalysisService:
             # Clamp overall_score
             clamped_overall = max(0.0, min(100.0, raw_result.overall_score))
             
+            # Convert pose_data to PoseData format for frontend overlay
+            from app.models.analysis import PoseData
+            pose_data_list = []
+            if pose_data:
+                for i, frame_data in enumerate(pose_data):
+                    landmarks_dict = frame_data.get("landmarks", {})
+                    # Convert landmarks from Tuple format to Dict format for JSON serialization
+                    landmarks_formatted = {}
+                    for key, value in landmarks_dict.items():
+                        if isinstance(value, tuple) and len(value) == 3:
+                            landmarks_formatted[key] = {"x": value[0], "y": value[1], "z": value[2]}
+                        elif isinstance(value, dict):
+                            landmarks_formatted[key] = value
+                    
+                    pose_data_list.append(
+                        PoseData(
+                            frame_number=i,
+                            timestamp=i * (1.0 / 30.0),  # Estimate: 30 FPS
+                            landmarks=landmarks_formatted,
+                            angles=frame_data.get("angles", {})
+                        )
+                    )
+            
             # Build normalized result
             normalized_result = AnalysisResult(
                 video_id=raw_result.video_id,
@@ -289,7 +312,8 @@ class AnalysisService:
                 processing_time=time.time() - start_time,
                 frames_analyzed=raw_result.raw_data.get('frame_count', len(pose_data)) if raw_result.raw_data else len(pose_data) if pose_data else 0,
                 raw_data=raw_result.raw_data,
-                analysis_id=getattr(raw_result, 'analysis_id', None)
+                analysis_id=getattr(raw_result, 'analysis_id', None),
+                pose_data=pose_data_list  # Include pose data for frontend overlay
             )
             
             # Get previous attempt for improvement tracking
