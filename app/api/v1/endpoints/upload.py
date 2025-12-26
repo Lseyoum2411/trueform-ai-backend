@@ -5,6 +5,7 @@ from app.models.analysis import AnalysisResult
 from app.services.analysis_service import AnalysisService
 from app.config import settings, SUPPORTED_SPORTS, EXERCISE_TYPES, EXERCISE_ALIASES
 from app.utils.status_helper import update_video_status, video_statuses, analysis_results
+from app.utils.rate_limiter import can_start_analysis, start_analysis, finish_analysis
 from app.core.pose_estimator import PoseEstimator
 import os
 import uuid
@@ -163,7 +164,6 @@ async def upload_video(
         )
     
     # Check rate limit before queuing analysis
-    from app.utils.rate_limiter import can_start_analysis
     if not can_start_analysis(video_id):
         os.remove(file_path)  # Clean up uploaded file
         raise HTTPException(
