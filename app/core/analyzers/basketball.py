@@ -380,9 +380,33 @@ class BasketballAnalyzer(BaseAnalyzer):
             feedback.append(self.create_feedback("info", "Perfect elbow alignment — straight like Lethal Shooter teaches.", "elbow_alignment"))
             strengths.append("Perfect elbow alignment")
         elif score < 70:
-            feedback.append(self.create_feedback("critical", f"CRITICAL: Elbow flare {flare_degrees:.1f}° — tighten to align straight like Lethal Shooter teaches.", "elbow_alignment"))
+            feedback.append(self.create_actionable_feedback(
+                "critical",
+                "elbow_alignment",
+                f"Your elbow is flaring out {flare_degrees:.1f} degrees instead of staying straight.",
+                "Elbow flare causes the ball to travel off-center and creates inconsistent rotation, reducing accuracy significantly.",
+                [
+                    "Position your elbow directly under the ball with your forearm pointing straight up",
+                    "Feel your elbow stay in line with your shoulder throughout your shot",
+                    "Keep your shooting arm in a straight vertical line from shoulder to release point"
+                ],
+                "Elbow-alignment form shooting from 5 feet. Check elbow position before each shot. Make 30 shots focusing only on keeping elbow straight under ball.",
+                "Elbow straight"
+            ))
         else:
-            feedback.append(self.create_feedback("warning", f"Minor elbow flare ({flare_degrees:.1f}°). Work on keeping elbow in line.", "elbow_alignment"))
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "elbow_alignment",
+                f"Your elbow has a slight flare of {flare_degrees:.1f} degrees.",
+                "Even minor elbow deviations can cause the ball to miss left or right and reduce shooting consistency.",
+                [
+                    "Feel your elbow directly under the ball before you start your upward motion",
+                    "Keep your shooting arm in a straight line from your shoulder through your release",
+                    "Maintain elbow alignment throughout your entire shooting motion"
+                ],
+                "Straight-elbow form shooting from 5 feet. Check alignment in mirror. Make 25 shots with extra focus on elbow position.",
+                "Keep it straight"
+            ))
         
         return score
     
