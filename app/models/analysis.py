@@ -34,6 +34,13 @@ class Feedback(BaseModel):
     message: str
     severity: str = "info"
     timestamp: Optional[float] = None
+    # Optional structured fields for actionable recommendations (basketball-specific)
+    observation: Optional[str] = None
+    impact: Optional[str] = None
+    how_to_fix: Optional[List[str]] = None
+    drill: Optional[str] = None
+    coaching_cue: Optional[str] = None
+    recommendation: Optional[str] = None  # Legacy/fallback recommendation text
 
 
 class AnalysisResult(BaseModel):

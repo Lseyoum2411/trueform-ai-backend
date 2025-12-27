@@ -18,8 +18,9 @@ $uri = "https://trueform-ai-backend-production.up.railway.app/api/v1/upload"
 $filePath = "C:\path\to\your\video.mp4"  # Replace with actual path
 
 # Upload video for basketball analysis
+# IMPORTANT: Field name "video" must match the FastAPI parameter name exactly
 $form = @{
-    video = Get-Item -Path $filePath
+    video = Get-Item -Path $filePath  # ← Must be "video", NOT "file"
     sport = "basketball"
 }
 

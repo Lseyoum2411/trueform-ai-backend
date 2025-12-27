@@ -84,7 +84,19 @@ class BasketballAnalyzer(BaseAnalyzer):
             feedback.append(self.create_feedback("info", "Excellent base stability — solid foundation.", "base_stability"))
             strengths.append("Strong base stability")
         elif score < 60:
-            feedback.append(self.create_feedback("warning", "Base too narrow or wide. Aim for shoulder-width stance.", "base_stability"))
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "base_stability",
+                "Your stance width is narrower or wider than optimal for balance.",
+                "An improper stance width reduces stability during the shot and makes it harder to generate consistent power from your legs.",
+                [
+                    "Position your feet shoulder-width apart",
+                    "Keep weight evenly distributed between both feet",
+                    "Slight bend in knees with toes pointing forward"
+                ],
+                "Standing in front of the basket, take 10 shots focusing only on your stance width. Make it feel natural and balanced.",
+                "Shoulder-width, balanced feet"
+            ))
         
         return score
     
@@ -109,7 +121,19 @@ class BasketballAnalyzer(BaseAnalyzer):
         if score >= 85:
             feedback.append(self.create_feedback("info", "Perfect vertical alignment — body stacked correctly.", "vertical_alignment"))
         elif score < 60:
-            feedback.append(self.create_feedback("warning", "Body leaning forward or backward. Keep vertical stack.", "vertical_alignment"))
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "vertical_alignment",
+                "Your body is leaning forward or backward instead of staying stacked vertically.",
+                "Leaning affects your balance and power transfer, making it harder to maintain consistent shooting form.",
+                [
+                    "Keep your head, shoulders, hips, and feet aligned vertically",
+                    "Avoid leaning forward into the shot or backward for balance",
+                    "Use your legs for power rather than leaning to generate force"
+                ],
+                "Standing still, practice your shooting motion 20 times while maintaining perfect vertical alignment. Use a mirror to check your posture.",
+                "Stacked and balanced"
+            ))
         
         return score
     
@@ -145,7 +169,19 @@ class BasketballAnalyzer(BaseAnalyzer):
             feedback.append(self.create_feedback("info", "Perfect one-motion shot — Curry-level smoothness.", "shot_rhythm"))
             strengths.append("Elite shot rhythm")
         elif score < 60:
-            feedback.append(self.create_feedback("warning", "Inconsistent rhythm. Smooth out the motion.", "shot_rhythm"))
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "shot_rhythm",
+                "Your shot rhythm varies between attempts.",
+                "Inconsistent rhythm makes it harder to repeat the same release under pressure.",
+                [
+                    "Load legs and arms together",
+                    "Avoid stopping the ball at the set point",
+                    "Match upward body motion with arm extension"
+                ],
+                "Slow-motion form shooting progressing to game speed. Take 25 shots focusing on rhythm.",
+                "Smooth up, smooth through"
+            ))
         
         return score
     
@@ -171,7 +207,19 @@ class BasketballAnalyzer(BaseAnalyzer):
         if score >= 85:
             feedback.append(self.create_feedback("info", "Smooth one-motion flow — no hitches.", "one_motion_flow"))
         elif score < 60:
-            feedback.append(self.create_feedback("warning", "Motion has hitches. Practice smooth continuous motion.", "one_motion_flow"))
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "one_motion_flow",
+                "Your shooting motion contains hitches or pauses.",
+                "Hitches break the flow of your shot and reduce consistency and power transfer.",
+                [
+                    "Eliminate the pause at your set point",
+                    "Connect your leg drive directly to your arm extension",
+                    "Keep the ball moving in one fluid upward motion"
+                ],
+                "Form shooting from close range. Practice 30 shots with emphasis on eliminating all pauses.",
+                "One motion, no stops"
+            ))
         
         return score
     
@@ -207,7 +255,19 @@ class BasketballAnalyzer(BaseAnalyzer):
             feedback.append(self.create_feedback("info", f"Release speed fast ({avg_velocity:.2f}m/s) — elite range.", "release_speed"))
             strengths.append("Fast release speed")
         elif score < 60:
-            feedback.append(self.create_feedback("warning", "Release too slow. Generate more upward velocity.", "release_speed"))
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "release_speed",
+                "Your release speed is slower than optimal.",
+                "A slower release increases contest risk and reduces consistency under pressure.",
+                [
+                    "Start the shot with the ball already set in your shooting pocket",
+                    "Remove any pause at the set point",
+                    "Focus on one continuous upward motion"
+                ],
+                "One-motion form shooting from 5-7 feet. Take 25 shots focusing only on speed.",
+                "Lift and release"
+            ))
         
         return score
     
@@ -235,7 +295,19 @@ class BasketballAnalyzer(BaseAnalyzer):
         if score >= 85:
             feedback.append(self.create_feedback("info", "Good knee bend — proper loading.", "knee_bend"))
         elif score < 60:
-            feedback.append(self.create_feedback("warning", "Insufficient knee bend. Load more power from legs.", "knee_bend"))
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "knee_bend",
+                "Your knee bend is insufficient for optimal power generation.",
+                "Without proper leg loading, you rely too much on arm strength, reducing shot power and consistency.",
+                [
+                    "Bend your knees to at least 90 degrees on your load",
+                    "Feel your quads and glutes engage as you prepare to jump",
+                    "Drive up through your legs as you release"
+                ],
+                "Standing in front of the basket, practice 20 shots focusing on feeling your legs load and drive.",
+                "Load the legs, drive up"
+            ))
         
         return score
     
@@ -256,7 +328,19 @@ class BasketballAnalyzer(BaseAnalyzer):
         if score >= 85:
             feedback.append(self.create_feedback("info", "Hips level and aligned.", "hip_alignment"))
         elif score < 60:
-            feedback.append(self.create_feedback("warning", "Hip misalignment detected. Keep hips level.", "hip_alignment"))
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "hip_alignment",
+                "Your hips are not level during the shot.",
+                "Hip misalignment affects your balance and reduces power transfer from your lower body.",
+                [
+                    "Keep both hips at the same height throughout the shot",
+                    "Avoid leaning to one side or raising one hip higher than the other",
+                    "Maintain a square base with both feet firmly planted"
+                ],
+                "Mirror work: Stand facing a mirror and practice your shooting motion, checking that your hips stay level.",
+                "Level hips, square base"
+            ))
         
         return score
     
@@ -325,7 +409,19 @@ class BasketballAnalyzer(BaseAnalyzer):
         if score >= 85:
             feedback.append(self.create_feedback("info", "Good shooting pocket position.", "shooting_pocket"))
         elif score < 60:
-            feedback.append(self.create_feedback("warning", "Shooting pocket too high or low. Find comfortable position.", "shooting_pocket"))
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "shooting_pocket",
+                "Your shooting pocket position is too high or too low.",
+                "An incorrect shooting pocket position disrupts your shot rhythm and makes it harder to generate consistent power.",
+                [
+                    "Position the ball at your shooting pocket height (around chest level)",
+                    "Keep your elbow at 90 degrees when the ball is in your pocket",
+                    "Find a comfortable position that allows smooth upward motion"
+                ],
+                "Standing still, practice bringing the ball to your shooting pocket 20 times. Find the position that feels most natural.",
+                "Chest level, elbow bent"
+            ))
         
         return score
     
@@ -352,7 +448,19 @@ class BasketballAnalyzer(BaseAnalyzer):
         if score >= 85:
             feedback.append(self.create_feedback("info", "Optimal release point height.", "release_point"))
         elif score < 60:
-            feedback.append(self.create_feedback("warning", "Release point too low. Extend upward more.", "release_point"))
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "release_point",
+                "Your release point is lower than optimal.",
+                "A low release point reduces shot arc and makes it easier for defenders to contest, decreasing your shooting percentage.",
+                [
+                    "Extend your shooting arm fully upward on release",
+                    "Release the ball at the highest point of your jump or standing reach",
+                    "Keep your follow-through high after the release"
+                ],
+                "Form shooting from close range. Take 25 shots focusing on releasing the ball at your highest point.",
+                "Release at the top"
+            ))
         
         return score
     
@@ -378,7 +486,19 @@ class BasketballAnalyzer(BaseAnalyzer):
         if score >= 85:
             feedback.append(self.create_feedback("info", "Good shot arc — proper trajectory.", "shot_arc"))
         elif score < 60:
-            feedback.append(self.create_feedback("warning", "Shot arc too flat. Increase upward angle.", "shot_arc"))
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "shot_arc",
+                "Your shot arc is too flat.",
+                "A flat shot arc reduces the size of the target (rim) and increases the chance of hitting the front of the rim.",
+                [
+                    "Increase the upward angle of your release",
+                    "Aim higher above the rim to create more arc",
+                    "Use more leg power to add lift to your shot"
+                ],
+                "Form shooting from 10-15 feet. Take 30 shots focusing on creating a higher arc. Aim to get the ball higher above the rim.",
+                "Higher arc, aim above rim"
+            ))
         
         return score
     
@@ -406,7 +526,19 @@ class BasketballAnalyzer(BaseAnalyzer):
         if score >= 85:
             feedback.append(self.create_feedback("info", "Good follow-through extension.", "follow_through"))
         elif score < 60:
-            feedback.append(self.create_feedback("warning", "Follow-through short. Hold wrist longer.", "follow_through"))
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "follow_through",
+                "Your follow-through is incomplete or too short.",
+                "A proper follow-through ensures consistent ball rotation and helps maintain shot accuracy by completing the shooting motion.",
+                [
+                    "Hold your follow-through position until the ball reaches the rim",
+                    "Keep your wrist snapped forward with fingers pointing down",
+                    "Maintain your arm extension in the follow-through position"
+                ],
+                "Form shooting from close range. Take 25 shots focusing on holding your follow-through until the ball hits the rim.",
+                "Hold the follow-through"
+            ))
         
         return score
     
@@ -436,7 +568,19 @@ class BasketballAnalyzer(BaseAnalyzer):
         if score >= 85:
             feedback.append(self.create_feedback("info", "Good wrist snap — proper release motion.", "wrist_snap"))
         elif score < 60:
-            feedback.append(self.create_feedback("warning", "Wrist snap too weak or too strong. Find balance.", "wrist_snap"))
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "wrist_snap",
+                "Your wrist snap is either too weak or too forceful.",
+                "An improper wrist snap affects ball rotation and can lead to inconsistent shot results.",
+                [
+                    "Snap your wrist forward smoothly at the moment of release",
+                    "Let your fingers guide the ball with a natural forward motion",
+                    "Avoid forcing the snap or holding back too much"
+                ],
+                "Form shooting from close range. Take 30 shots focusing on the feel of your wrist snap at release.",
+                "Smooth snap, fingers through ball"
+            ))
         
         return score
     

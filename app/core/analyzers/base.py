@@ -27,6 +27,35 @@ class BaseAnalyzer(ABC):
     ) -> FeedbackItem:
         return FeedbackItem(level=level, message=message, metric=metric)
     
+    def create_actionable_feedback(
+        self,
+        level: str,
+        metric: str,
+        observation: str,
+        impact: str,
+        how_to_fix: List[str],
+        drill: str,
+        coaching_cue: str,
+    ) -> FeedbackItem:
+        """Create structured feedback for basketball with actionable recommendations."""
+        # Combine into message for backwards compatibility, but structure is in metadata
+        message_parts = [observation]
+        if impact:
+            message_parts.append(f"Impact: {impact}")
+        if how_to_fix:
+            message_parts.append(f"How to fix: {', '.join(how_to_fix)}")
+        if drill:
+            message_parts.append(f"Drill: {drill}")
+        if coaching_cue:
+            message_parts.append(f"Cue: {coaching_cue}")
+        
+        # Store structured data in message with special markers (will be parsed in service layer)
+        # Format: OBSERVATION|observation text|IMPACT|impact text|HOW_TO_FIX|item1||item2||item3|DRILL|drill text|CUE|cue text
+        # Use double pipe (||) as delimiter for list items to avoid conflicts
+        how_to_fix_str = "||".join(how_to_fix) if how_to_fix else ""
+        structured_message = f"OBSERVATION|{observation}|IMPACT|{impact}|HOW_TO_FIX|{how_to_fix_str}|DRILL|{drill}|CUE|{coaching_cue}"
+        return FeedbackItem(level=level, message=structured_message, metric=metric)
+    
     def create_metric(
         self,
         name: str,

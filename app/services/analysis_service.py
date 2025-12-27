@@ -103,12 +103,48 @@ class AnalysisService:
         """Convert legacy FeedbackItem list to new Feedback list."""
         feedback_list = []
         for item in feedback_items:
+            # Parse structured message if it contains action data markers (basketball-specific)
+            observation = None
+            impact = None
+            how_to_fix = None
+            drill = None
+            coaching_cue = None
+            
+            if "|OBSERVATION|" in item.message:
+                parts = item.message.split("|")
+                try:
+                    obs_idx = parts.index("OBSERVATION")
+                    impact_idx = parts.index("IMPACT")
+                    how_idx = parts.index("HOW_TO_FIX")
+                    drill_idx = parts.index("DRILL")
+                    cue_idx = parts.index("CUE")
+                    
+                    observation = parts[obs_idx + 1] if obs_idx + 1 < len(parts) else None
+                    impact = parts[impact_idx + 1] if impact_idx + 1 < len(parts) else None
+                    # Extract how_to_fix items (everything between HOW_TO_FIX and DRILL markers)
+                    if how_idx + 1 < drill_idx:
+                        how_to_fix_parts = parts[how_idx + 1:drill_idx]
+                        how_to_fix_str = "|".join(how_to_fix_parts)  # Rejoin with single pipe
+                        how_to_fix = how_to_fix_str.split("||") if how_to_fix_str else None  # Split on double pipe delimiter
+                        how_to_fix = [item.strip() for item in how_to_fix] if how_to_fix else None  # Clean up whitespace
+                    else:
+                        how_to_fix = None
+                    drill = parts[drill_idx + 1] if drill_idx + 1 < len(parts) else None
+                    coaching_cue = parts[cue_idx + 1] if cue_idx + 1 < len(parts) else None
+                except (ValueError, IndexError):
+                    pass  # Fall back to regular message parsing
+            
             feedback_list.append(Feedback(
                 category="form_analysis",
                 aspect=item.metric or "general",
                 message=item.message,
                 severity=item.level,  # Map level -> severity
-                timestamp=None
+                timestamp=None,
+                observation=observation,
+                impact=impact,
+                how_to_fix=how_to_fix,
+                drill=drill,
+                coaching_cue=coaching_cue
             ))
         return feedback_list
     
