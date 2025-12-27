@@ -41,6 +41,11 @@ class Feedback(BaseModel):
     drill: Optional[str] = None
     coaching_cue: Optional[str] = None
     recommendation: Optional[str] = None  # Legacy/fallback recommendation text
+    # Optional structured fields for beginner-friendly weightlifting feedback
+    what_we_saw: Optional[str] = None
+    what_it_should_feel_like: Optional[str] = None
+    common_mistake: Optional[str] = None
+    self_check: Optional[str] = None
 
 
 class AnalysisResult(BaseModel):

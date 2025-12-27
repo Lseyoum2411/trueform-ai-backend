@@ -19,27 +19,27 @@ class RDLAnalyzer(BaseLiftAnalyzer):
         strengths = []
         weaknesses = []
         
-        depth_score, depth_metric, depth_feedback = self.analyze_depth(landmarks_list, 0.65)
+        depth_score, depth_metric, depth_feedback = self.analyze_depth(landmarks_list, 0.65, "rdl")
         metrics.append(depth_metric)
         feedback.extend(depth_feedback)
         
-        path_score, path_metric, path_feedback = self.analyze_bar_path(landmarks_list)
+        path_score, path_metric, path_feedback = self.analyze_bar_path(landmarks_list, "rdl")
         metrics.append(path_metric)
         feedback.extend(path_feedback)
         
-        spine_score, spine_metric, spine_feedback = self.analyze_spine_alignment(landmarks_list)
+        spine_score, spine_metric, spine_feedback = self.analyze_spine_alignment(landmarks_list, "rdl")
         metrics.append(spine_metric)
         feedback.extend(spine_feedback)
         
-        tempo_score, tempo_metric, tempo_feedback = self.analyze_tempo(pose_data)
+        tempo_score, tempo_metric, tempo_feedback = self.analyze_tempo(pose_data, "rdl")
         metrics.append(tempo_metric)
         feedback.extend(tempo_feedback)
         
-        hip_score, hip_metric, hip_feedback = self.analyze_joint_angles(angles_list, "left_hip", 130.0, 25.0)
+        hip_score, hip_metric, hip_feedback = self.analyze_joint_angles(angles_list, "left_hip", 130.0, 25.0, "rdl")
         metrics.append(hip_metric)
         feedback.extend(hip_feedback)
         
-        knee_score, knee_metric, knee_feedback = self.analyze_joint_angles(angles_list, "left_knee", 170.0, 15.0)
+        knee_score, knee_metric, knee_feedback = self.analyze_joint_angles(angles_list, "left_knee", 170.0, 15.0, "rdl")
         metrics.append(knee_metric)
         feedback.extend(knee_feedback)
         
@@ -81,6 +81,7 @@ class RDLAnalyzer(BaseLiftAnalyzer):
             raw_data={},
             created_at=datetime.now(),
         )
+
 
 
 

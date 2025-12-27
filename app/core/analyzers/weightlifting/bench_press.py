@@ -19,27 +19,27 @@ class BenchPressAnalyzer(BaseLiftAnalyzer):
         strengths = []
         weaknesses = []
         
-        depth_score, depth_metric, depth_feedback = self.analyze_depth(landmarks_list, 0.5)
+        depth_score, depth_metric, depth_feedback = self.analyze_depth(landmarks_list, 0.5, "bench_press")
         metrics.append(depth_metric)
         feedback.extend(depth_feedback)
         
-        path_score, path_metric, path_feedback = self.analyze_bar_path(landmarks_list)
+        path_score, path_metric, path_feedback = self.analyze_bar_path(landmarks_list, "bench_press")
         metrics.append(path_metric)
         feedback.extend(path_feedback)
         
-        spine_score, spine_metric, spine_feedback = self.analyze_spine_alignment(landmarks_list)
+        spine_score, spine_metric, spine_feedback = self.analyze_spine_alignment(landmarks_list, "bench_press")
         metrics.append(spine_metric)
         feedback.extend(spine_feedback)
         
-        tempo_score, tempo_metric, tempo_feedback = self.analyze_tempo(pose_data)
+        tempo_score, tempo_metric, tempo_feedback = self.analyze_tempo(pose_data, "bench_press")
         metrics.append(tempo_metric)
         feedback.extend(tempo_feedback)
         
-        elbow_score, elbow_metric, elbow_feedback = self.analyze_joint_angles(angles_list, "left_elbow", 90.0, 15.0)
+        elbow_score, elbow_metric, elbow_feedback = self.analyze_joint_angles(angles_list, "left_elbow", 90.0, 15.0, "bench_press")
         metrics.append(elbow_metric)
         feedback.extend(elbow_feedback)
         
-        shoulder_score, shoulder_metric, shoulder_feedback = self.analyze_joint_angles(angles_list, "left_hip", 45.0, 20.0)
+        shoulder_score, shoulder_metric, shoulder_feedback = self.analyze_joint_angles(angles_list, "left_hip", 45.0, 20.0, "bench_press")
         metrics.append(shoulder_metric)
         feedback.extend(shoulder_feedback)
         
@@ -81,6 +81,7 @@ class BenchPressAnalyzer(BaseLiftAnalyzer):
             raw_data={},
             created_at=datetime.now(),
         )
+
 
 
 

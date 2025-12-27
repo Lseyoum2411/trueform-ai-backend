@@ -103,13 +103,18 @@ class AnalysisService:
         """Convert legacy FeedbackItem list to new Feedback list."""
         feedback_list = []
         for item in feedback_items:
-            # Parse structured message if it contains action data markers (basketball-specific)
+            # Parse structured message if it contains action data markers
             observation = None
             impact = None
             how_to_fix = None
             drill = None
             coaching_cue = None
+            what_we_saw = None
+            what_it_should_feel_like = None
+            common_mistake = None
+            self_check = None
             
+            # Parse basketball-style feedback (OBSERVATION|IMPACT|HOW_TO_FIX|DRILL|CUE)
             if "OBSERVATION|" in item.message:
                 parts = item.message.split("|")
                 try:
@@ -134,6 +139,31 @@ class AnalysisService:
                 except (ValueError, IndexError):
                     pass  # Fall back to regular message parsing
             
+            # Parse weightlifting beginner-friendly feedback (WHAT_WE_SAW|HOW_TO_FIX|WHAT_IT_SHOULD_FEEL_LIKE|COMMON_MISTAKE|SELF_CHECK)
+            if "WHAT_WE_SAW|" in item.message:
+                parts = item.message.split("|")
+                try:
+                    saw_idx = parts.index("WHAT_WE_SAW")
+                    how_idx = parts.index("HOW_TO_FIX")
+                    feel_idx = parts.index("WHAT_IT_SHOULD_FEEL_LIKE")
+                    mistake_idx = parts.index("COMMON_MISTAKE")
+                    check_idx = parts.index("SELF_CHECK")
+                    
+                    what_we_saw = parts[saw_idx + 1] if saw_idx + 1 < len(parts) else None
+                    # Extract how_to_fix items (everything between HOW_TO_FIX and WHAT_IT_SHOULD_FEEL_LIKE markers)
+                    if how_idx + 1 < feel_idx:
+                        how_to_fix_parts = parts[how_idx + 1:feel_idx]
+                        how_to_fix_str = "|".join(how_to_fix_parts)
+                        how_to_fix = how_to_fix_str.split("||") if how_to_fix_str else None
+                        how_to_fix = [item.strip() for item in how_to_fix] if how_to_fix else None
+                    else:
+                        how_to_fix = None
+                    what_it_should_feel_like = parts[feel_idx + 1] if feel_idx + 1 < len(parts) else None
+                    common_mistake = parts[mistake_idx + 1] if mistake_idx + 1 < len(parts) else None
+                    self_check = parts[check_idx + 1] if check_idx + 1 < len(parts) else None
+                except (ValueError, IndexError):
+                    pass  # Fall back to regular message parsing
+            
             feedback_list.append(Feedback(
                 category="form_analysis",
                 aspect=item.metric or "general",
@@ -144,7 +174,11 @@ class AnalysisService:
                 impact=impact,
                 how_to_fix=how_to_fix,
                 drill=drill,
-                coaching_cue=coaching_cue
+                coaching_cue=coaching_cue,
+                what_we_saw=what_we_saw,
+                what_it_should_feel_like=what_it_should_feel_like,
+                common_mistake=common_mistake,
+                self_check=self_check
             ))
         return feedback_list
     

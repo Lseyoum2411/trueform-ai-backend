@@ -60,3 +60,4 @@ async def readiness_check():
             detail=f"Service not ready. Checks: {checks}"
         )
 
+

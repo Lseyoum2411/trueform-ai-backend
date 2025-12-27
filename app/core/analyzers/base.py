@@ -64,4 +64,20 @@ class BaseAnalyzer(ABC):
         unit: Optional[str] = None,
     ) -> MetricScore:
         return MetricScore(name=name, score=score, value=value, unit=unit)
+    
+    def create_beginner_feedback(
+        self,
+        level: str,
+        metric: str,
+        what_we_saw: str,
+        how_to_fix: List[str],
+        what_it_should_feel_like: str,
+        common_mistake: str,
+        self_check: str,
+    ) -> FeedbackItem:
+        """Create beginner-friendly feedback for weightlifting with simple, clear instructions."""
+        # Combine into structured message format
+        how_to_fix_str = "||".join(how_to_fix) if how_to_fix else ""
+        structured_message = f"WHAT_WE_SAW|{what_we_saw}|HOW_TO_FIX|{how_to_fix_str}|WHAT_IT_SHOULD_FEEL_LIKE|{what_it_should_feel_like}|COMMON_MISTAKE|{common_mistake}|SELF_CHECK|{self_check}"
+        return FeedbackItem(level=level, message=structured_message, metric=metric)
 

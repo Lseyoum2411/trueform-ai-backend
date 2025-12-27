@@ -61,3 +61,4 @@ def get_active_count() -> int:
     """Get number of currently active analyses."""
     return len(_active_analyses)
 
+

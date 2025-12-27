@@ -12,3 +12,4 @@ class ErrorResponse(BaseModel):
     request_id: Optional[str] = None
     detail: Optional[str] = None  # Additional context if needed
 
+

@@ -33,7 +33,7 @@ EXERCISE_TYPES = {
     "golf": ["driver", "fairway", "chip", "putt"],
     "weightlifting": [
         "back_squat", "front_squat", "deadlift", "rdl",
-        "bench_press", "barbell_row", "lat_pulldown"
+        "bench_press", "barbell_row", "dumbbell_row", "lat_pulldown"
     ],
 }
 
@@ -41,6 +41,8 @@ EXERCISE_ALIASES = {
     "squat": "back_squat",
     "bench": "bench_press",
     "row": "barbell_row",
+    "db_row": "dumbbell_row",
+    "dumbbell_row": "dumbbell_row",
     "pulldown": "lat_pulldown",
 }
 
@@ -51,6 +53,7 @@ LIFT_TYPE_MAPPING = {
     "rdl": "rdl",
     "bench_press": "bench_press",
     "barbell_row": "barbell_row",
+    "dumbbell_row": "dumbbell_row",
     "lat_pulldown": "lat_pulldown",
 }
 

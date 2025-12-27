@@ -6,6 +6,7 @@ from app.core.analyzers.weightlifting.deadlift import DeadliftAnalyzer
 from app.core.analyzers.weightlifting.rdl import RDLAnalyzer
 from app.core.analyzers.weightlifting.bench_press import BenchPressAnalyzer
 from app.core.analyzers.weightlifting.barbell_row import BarbellRowAnalyzer
+from app.core.analyzers.weightlifting.dumbbell_row import DumbbellRowAnalyzer
 from app.core.analyzers.weightlifting.lat_pulldown import LatPulldownAnalyzer
 from app.models.analysis import AnalysisResult
 
@@ -20,6 +21,7 @@ class WeightliftingAnalyzer(BaseAnalyzer):
             "rdl": RDLAnalyzer(),
             "bench_press": BenchPressAnalyzer(),
             "barbell_row": BarbellRowAnalyzer(),
+            "dumbbell_row": DumbbellRowAnalyzer(),
             "lat_pulldown": LatPulldownAnalyzer(),
         }
     
@@ -34,6 +36,7 @@ class WeightliftingAnalyzer(BaseAnalyzer):
         result = await analyzer.analyze(pose_data)
         result.lift_type = lift_type
         return result
+
 
 
 
