@@ -7,6 +7,7 @@ from datetime import datetime
 from app.core.analyzers.basketball import BasketballAnalyzer
 from app.core.analyzers.golf import GolfAnalyzer
 from app.core.analyzers.weightlifting import WeightliftingAnalyzer
+from app.core.analyzers.baseball import BaseballAnalyzer
 from app.models.analysis import AnalysisResult, Feedback, FeedbackItem, MetricScore
 from app.config import settings
 
@@ -312,6 +313,10 @@ class AnalysisService:
             elif sport == "weightlifting":
                 lift_type = exercise_type or "back_squat"
                 raw_result = await self.weightlifting_analyzer.analyze(pose_data, lift_type=lift_type)
+            elif sport == "baseball":
+                exercise_type_for_analyzer = exercise_type or "pitching"
+                baseball_analyzer = BaseballAnalyzer(exercise_type=exercise_type_for_analyzer)
+                raw_result = await baseball_analyzer.analyze(pose_data)
             else:
                 raise ValueError(f"Unsupported sport: {sport}")
             

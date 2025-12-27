@@ -7,6 +7,7 @@ from app.core.analyzers.weightlifting.rdl import RDLAnalyzer
 from app.core.analyzers.weightlifting.bench_press import BenchPressAnalyzer
 from app.core.analyzers.weightlifting.barbell_row import BarbellRowAnalyzer
 from app.core.analyzers.weightlifting.dumbbell_row import DumbbellRowAnalyzer
+from app.core.analyzers.weightlifting.rear_delt_flies import RearDeltFliesAnalyzer
 from app.core.analyzers.weightlifting.lat_pulldown import LatPulldownAnalyzer
 from app.models.analysis import AnalysisResult
 
@@ -22,6 +23,7 @@ class WeightliftingAnalyzer(BaseAnalyzer):
             "bench_press": BenchPressAnalyzer(),
             "barbell_row": BarbellRowAnalyzer(),
             "dumbbell_row": DumbbellRowAnalyzer(),
+            "rear_delt_flies": RearDeltFliesAnalyzer(),
             "lat_pulldown": LatPulldownAnalyzer(),
         }
     

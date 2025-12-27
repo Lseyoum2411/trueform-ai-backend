@@ -127,7 +127,7 @@ async def upload_video(
     # Validate exercise_type based on sport requirements
     if sport == "basketball":
         exercise_type = "jumpshot"
-    elif sport in ["golf", "weightlifting"]:
+    elif sport in ["golf", "weightlifting", "baseball"]:
         if not exercise_type:
             raise HTTPException(
                 status_code=400,

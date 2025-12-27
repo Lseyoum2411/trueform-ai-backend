@@ -26,15 +26,16 @@ def get_settings() -> Settings:
 
 settings = get_settings()
 
-SUPPORTED_SPORTS = ["basketball", "golf", "weightlifting"]
+SUPPORTED_SPORTS = ["basketball", "golf", "weightlifting", "baseball"]
 
 EXERCISE_TYPES = {
     "basketball": ["jumpshot"],
     "golf": ["driver", "fairway", "chip", "putt"],
     "weightlifting": [
         "back_squat", "front_squat", "deadlift", "rdl",
-        "bench_press", "barbell_row", "dumbbell_row", "lat_pulldown"
+        "bench_press", "barbell_row", "dumbbell_row", "rear_delt_flies", "lat_pulldown"
     ],
+    "baseball": ["pitching", "batting", "catcher", "fielding"],
 }
 
 EXERCISE_ALIASES = {
@@ -54,6 +55,7 @@ LIFT_TYPE_MAPPING = {
     "bench_press": "bench_press",
     "barbell_row": "barbell_row",
     "dumbbell_row": "dumbbell_row",
+    "rear_delt_flies": "rear_delt_flies",
     "lat_pulldown": "lat_pulldown",
 }
 

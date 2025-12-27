@@ -21,7 +21,16 @@ async def get_sports():
         ExerciseType(id="rdl", name="Romanian Deadlift", description="Hip hinge movement with straight legs"),
         ExerciseType(id="bench_press", name="Bench Press", description="Horizontal press on bench"),
         ExerciseType(id="barbell_row", name="Barbell Row", description="Bent-over rowing movement"),
+        ExerciseType(id="dumbbell_row", name="Dumbbell Row", description="Single or two-arm dumbbell row"),
+        ExerciseType(id="rear_delt_flies", name="Rear Delt Flies", description="Rear deltoid isolation exercise"),
         ExerciseType(id="lat_pulldown", name="Lat Pulldown", description="Vertical pulling movement"),
+    ]
+    
+    baseball_exercises = [
+        ExerciseType(id="pitching", name="Pitching", description="Analyze pitching form and mechanics"),
+        ExerciseType(id="batting", name="Batting", description="Analyze batting stance and swing"),
+        ExerciseType(id="catcher", name="Catcher", description="Analyze catching form and positioning"),
+        ExerciseType(id="fielding", name="Fielding", description="Analyze fielding stance and mechanics"),
     ]
     
     sports_data = [
@@ -44,9 +53,16 @@ async def get_sports():
         Sport(
             id="weightlifting",
             name="Weightlifting",
-            description="Analyze form for 7 different lifts",
+            description="Analyze form for various lifts",
             requires_exercise_type=True,
             exercise_types=weightlifting_exercises,
+        ),
+        Sport(
+            id="baseball",
+            name="Baseball",
+            description="Analyze baseball form and mechanics",
+            requires_exercise_type=True,
+            exercise_types=baseball_exercises,
         ),
     ]
     return sports_data
@@ -71,7 +87,16 @@ async def get_sport(sport_id: str):
         ExerciseType(id="rdl", name="Romanian Deadlift", description="Hip hinge movement with straight legs"),
         ExerciseType(id="bench_press", name="Bench Press", description="Horizontal press on bench"),
         ExerciseType(id="barbell_row", name="Barbell Row", description="Bent-over rowing movement"),
+        ExerciseType(id="dumbbell_row", name="Dumbbell Row", description="Single or two-arm dumbbell row"),
+        ExerciseType(id="rear_delt_flies", name="Rear Delt Flies", description="Rear deltoid isolation exercise"),
         ExerciseType(id="lat_pulldown", name="Lat Pulldown", description="Vertical pulling movement"),
+    ]
+    
+    baseball_exercises = [
+        ExerciseType(id="pitching", name="Pitching", description="Analyze pitching form and mechanics"),
+        ExerciseType(id="batting", name="Batting", description="Analyze batting stance and swing"),
+        ExerciseType(id="catcher", name="Catcher", description="Analyze catching form and positioning"),
+        ExerciseType(id="fielding", name="Fielding", description="Analyze fielding stance and mechanics"),
     ]
     
     if sport_id == "basketball":
@@ -96,9 +121,17 @@ async def get_sport(sport_id: str):
         return Sport(
             id="weightlifting",
             name="Weightlifting",
-            description="Analyze form for 7 different lifts",
+            description="Analyze form for various lifts",
             requires_exercise_type=True,
             exercise_types=weightlifting_exercises,
+        )
+    elif sport_id == "baseball":
+        return Sport(
+            id="baseball",
+            name="Baseball",
+            description="Analyze baseball form and mechanics",
+            requires_exercise_type=True,
+            exercise_types=baseball_exercises,
         )
     
     raise HTTPException(status_code=404, detail="Sport not found")
