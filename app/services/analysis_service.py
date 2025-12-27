@@ -110,7 +110,7 @@ class AnalysisService:
             drill = None
             coaching_cue = None
             
-            if "|OBSERVATION|" in item.message:
+            if "OBSERVATION|" in item.message:
                 parts = item.message.split("|")
                 try:
                     obs_idx = parts.index("OBSERVATION")
