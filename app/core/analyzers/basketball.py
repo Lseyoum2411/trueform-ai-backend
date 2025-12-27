@@ -87,15 +87,15 @@ class BasketballAnalyzer(BaseAnalyzer):
             feedback.append(self.create_actionable_feedback(
                 "warning",
                 "base_stability",
-                "Your stance width is narrower or wider than optimal for balance.",
-                "An improper stance width reduces stability during the shot and makes it harder to generate consistent power from your legs.",
+                "Your feet are positioned too close together or too far apart.",
+                "An improper stance width reduces balance and power transfer from your legs to your shot.",
                 [
-                    "Position your feet shoulder-width apart",
-                    "Keep weight evenly distributed between both feet",
-                    "Slight bend in knees with toes pointing forward"
+                    "Place your feet directly under your shoulders with toes pointing forward",
+                    "Feel your weight evenly distributed on both feet before you shoot",
+                    "Maintain this width throughout your entire shooting motion"
                 ],
-                "Standing in front of the basket, take 10 shots focusing only on your stance width. Make it feel natural and balanced.",
-                "Shoulder-width, balanced feet"
+                "Stance-width form shooting from 5 feet. Check foot position before each shot. Make 25 shots focusing only on base width.",
+                "Shoulder width base"
             ))
         
         return score
@@ -124,15 +124,15 @@ class BasketballAnalyzer(BaseAnalyzer):
             feedback.append(self.create_actionable_feedback(
                 "warning",
                 "vertical_alignment",
-                "Your body is leaning forward or backward instead of staying stacked vertically.",
-                "Leaning affects your balance and power transfer, making it harder to maintain consistent shooting form.",
+                "Your body is leaning forward or backward instead of staying straight.",
+                "Leaning reduces balance and makes it harder to generate consistent power from your legs.",
                 [
-                    "Keep your head, shoulders, hips, and feet aligned vertically",
-                    "Avoid leaning forward into the shot or backward for balance",
-                    "Use your legs for power rather than leaning to generate force"
+                    "Feel your head stacked directly over your shoulders",
+                    "Keep your hips directly under your shoulders with no forward or backward lean",
+                    "Drive straight up through your legs instead of leaning to create power"
                 ],
-                "Standing still, practice your shooting motion 20 times while maintaining perfect vertical alignment. Use a mirror to check your posture.",
-                "Stacked and balanced"
+                "Vertical alignment form shooting from 5 feet. Use a mirror to check your posture. Hold the start position for 2 seconds before each shot. Make 20 shots.",
+                "Stay stacked"
             ))
         
         return score
@@ -172,15 +172,15 @@ class BasketballAnalyzer(BaseAnalyzer):
             feedback.append(self.create_actionable_feedback(
                 "warning",
                 "shot_rhythm",
-                "Your shot rhythm varies between attempts.",
-                "Inconsistent rhythm makes it harder to repeat the same release under pressure.",
+                "Your shooting motion has inconsistent timing between attempts.",
+                "Varying rhythm makes it harder to develop muscle memory and repeat your shot under pressure.",
                 [
-                    "Load legs and arms together",
-                    "Avoid stopping the ball at the set point",
-                    "Match upward body motion with arm extension"
+                    "Start your upward motion with the ball already set near your shooting pocket",
+                    "Eliminate any pause between knee bend and arm extension",
+                    "Keep the ball moving continuously upward from start to release"
                 ],
-                "Slow-motion form shooting progressing to game speed. Take 25 shots focusing on rhythm.",
-                "Smooth up, smooth through"
+                "One-motion form shooting from 5-8 feet. Make 25 shots without stopping the ball at any point during your motion.",
+                "One smooth motion"
             ))
         
         return score
@@ -210,15 +210,15 @@ class BasketballAnalyzer(BaseAnalyzer):
             feedback.append(self.create_actionable_feedback(
                 "warning",
                 "one_motion_flow",
-                "Your shooting motion contains hitches or pauses.",
-                "Hitches break the flow of your shot and reduce consistency and power transfer.",
+                "Your shooting motion has hitches or pauses that interrupt the flow.",
+                "Hitches break timing and reduce power transfer from your legs to the release.",
                 [
-                    "Eliminate the pause at your set point",
-                    "Connect your leg drive directly to your arm extension",
-                    "Keep the ball moving in one fluid upward motion"
+                    "Feel your legs and arms move up together without any stops",
+                    "Do not let the ball pause at your shooting pocket or set point",
+                    "Keep everything moving in one continuous motion from start to finish"
                 ],
-                "Form shooting from close range. Practice 30 shots with emphasis on eliminating all pauses.",
-                "One motion, no stops"
+                "Flow-through form shooting from 5 feet. Each shot must be one continuous motion. Make 30 shots focusing on eliminating all hitches.",
+                "No stops, keep flowing"
             ))
         
         return score
@@ -258,15 +258,15 @@ class BasketballAnalyzer(BaseAnalyzer):
             feedback.append(self.create_actionable_feedback(
                 "warning",
                 "release_speed",
-                "Your release speed is slower than optimal.",
-                "A slower release increases contest risk and reduces consistency under pressure.",
+                "Your release is slower than optimal for game situations.",
+                "A slow release gives defenders time to contest and reduces your shooting percentage under pressure.",
                 [
-                    "Start the shot with the ball already set in your shooting pocket",
-                    "Remove any pause at the set point",
-                    "Focus on one continuous upward motion"
+                    "Begin extending your legs before your shooting arm reaches full extension",
+                    "Release the ball earlier in your jump instead of waiting until the peak",
+                    "Feel your arm and legs work together to create speed"
                 ],
-                "One-motion form shooting from 5-7 feet. Take 25 shots focusing only on speed.",
-                "Lift and release"
+                "Quick-release catch-and-shoot from mid-range. Catch and release immediately. 5 sets of 5 shots with focus on speed.",
+                "Up fast"
             ))
         
         return score
@@ -298,15 +298,15 @@ class BasketballAnalyzer(BaseAnalyzer):
             feedback.append(self.create_actionable_feedback(
                 "warning",
                 "knee_bend",
-                "Your knee bend is insufficient for optimal power generation.",
-                "Without proper leg loading, you rely too much on arm strength, reducing shot power and consistency.",
+                "You are not bending your knees enough to generate power from your legs.",
+                "Insufficient leg loading forces you to use only arm strength, reducing shot power and range.",
                 [
-                    "Bend your knees to at least 90 degrees on your load",
-                    "Feel your quads and glutes engage as you prepare to jump",
-                    "Drive up through your legs as you release"
+                    "Bend your knees until your thighs are nearly parallel to the ground",
+                    "Feel your quads and glutes activate as you lower into your shooting position",
+                    "Explode up through your legs as you extend your shooting arm"
                 ],
-                "Standing in front of the basket, practice 20 shots focusing on feeling your legs load and drive.",
-                "Load the legs, drive up"
+                "Deep-bend form shooting from 10 feet. Focus on feeling your legs load before each shot. Make 20 shots emphasizing leg power.",
+                "Deep bend, explode up"
             ))
         
         return score
@@ -331,15 +331,15 @@ class BasketballAnalyzer(BaseAnalyzer):
             feedback.append(self.create_actionable_feedback(
                 "warning",
                 "hip_alignment",
-                "Your hips are not level during the shot.",
-                "Hip misalignment affects your balance and reduces power transfer from your lower body.",
+                "Your hips are tilted or uneven during your shooting motion.",
+                "Hip misalignment throws off your balance and reduces consistent power transfer from your lower body.",
                 [
-                    "Keep both hips at the same height throughout the shot",
-                    "Avoid leaning to one side or raising one hip higher than the other",
-                    "Maintain a square base with both feet firmly planted"
+                    "Feel both hip bones at the same height before and during your shot",
+                    "Keep your weight centered between both feet without shifting to one side",
+                    "Maintain level hips from the start of your motion through release"
                 ],
-                "Mirror work: Stand facing a mirror and practice your shooting motion, checking that your hips stay level.",
-                "Level hips, square base"
+                "Level-hips form shooting from 5 feet. Check hip position in mirror before each shot. Make 20 shots focusing on keeping hips level.",
+                "Hips level"
             ))
         
         return score
@@ -412,15 +412,15 @@ class BasketballAnalyzer(BaseAnalyzer):
             feedback.append(self.create_actionable_feedback(
                 "warning",
                 "shooting_pocket",
-                "Your shooting pocket position is too high or too low.",
-                "An incorrect shooting pocket position disrupts your shot rhythm and makes it harder to generate consistent power.",
+                "Your shooting pocket is positioned too high or too low.",
+                "An incorrect pocket position disrupts timing and makes it harder to generate consistent power and rhythm.",
                 [
-                    "Position the ball at your shooting pocket height (around chest level)",
-                    "Keep your elbow at 90 degrees when the ball is in your pocket",
-                    "Find a comfortable position that allows smooth upward motion"
+                    "Set the ball just outside your dominant shoulder with your elbow at 90 degrees",
+                    "Keep the ball above your waist and below your chin",
+                    "Feel your forearm stay vertical before you start your upward motion"
                 ],
-                "Standing still, practice bringing the ball to your shooting pocket 20 times. Find the position that feels most natural.",
-                "Chest level, elbow bent"
+                "Stationary pocket check shooting from 5 feet. Hold pocket position for 1 second, then shoot. Make 20 shots focusing on correct pocket height.",
+                "Pocket clean"
             ))
         
         return score
@@ -451,15 +451,15 @@ class BasketballAnalyzer(BaseAnalyzer):
             feedback.append(self.create_actionable_feedback(
                 "warning",
                 "release_point",
-                "Your release point is lower than optimal.",
-                "A low release point reduces shot arc and makes it easier for defenders to contest, decreasing your shooting percentage.",
+                "You are releasing the ball lower than optimal.",
+                "A low release point reduces shot arc and makes it easier for defenders to block your shot.",
                 [
-                    "Extend your shooting arm fully upward on release",
-                    "Release the ball at the highest point of your jump or standing reach",
-                    "Keep your follow-through high after the release"
+                    "Fully straighten your elbow before releasing the ball",
+                    "Finish with your fingers pointing toward the rim",
+                    "Hold your follow-through high until the ball hits the rim"
                 ],
-                "Form shooting from close range. Take 25 shots focusing on releasing the ball at your highest point.",
-                "Release at the top"
+                "High-release form shooting with exaggerated follow-through from 5 feet. Make 20 shots focusing on full arm extension at release.",
+                "Reach and hold"
             ))
         
         return score
@@ -489,15 +489,15 @@ class BasketballAnalyzer(BaseAnalyzer):
             feedback.append(self.create_actionable_feedback(
                 "warning",
                 "shot_arc",
-                "Your shot arc is too flat.",
-                "A flat shot arc reduces the size of the target (rim) and increases the chance of hitting the front of the rim.",
+                "Your shot trajectory is too flat with insufficient arc.",
+                "A flat shot reduces the effective rim size and increases the chance of hitting the front of the rim or having shots blocked.",
                 [
-                    "Increase the upward angle of your release",
-                    "Aim higher above the rim to create more arc",
-                    "Use more leg power to add lift to your shot"
+                    "Feel your shooting hand finish higher above your head after release",
+                    "Aim the ball to peak at least 2 feet above the rim",
+                    "Use more upward force from your legs to create additional lift"
                 ],
-                "Form shooting from 10-15 feet. Take 30 shots focusing on creating a higher arc. Aim to get the ball higher above the rim.",
-                "Higher arc, aim above rim"
+                "High-arc form shooting from 12 feet. Visualize the ball going high above the rim. Make 30 shots focusing on creating maximum arc.",
+                "High arc"
             ))
         
         return score
@@ -529,15 +529,15 @@ class BasketballAnalyzer(BaseAnalyzer):
             feedback.append(self.create_actionable_feedback(
                 "warning",
                 "follow_through",
-                "Your follow-through is incomplete or too short.",
-                "A proper follow-through ensures consistent ball rotation and helps maintain shot accuracy by completing the shooting motion.",
+                "You are not holding your follow-through long enough.",
+                "A short follow-through reduces ball rotation and makes it harder to maintain consistent shot accuracy.",
                 [
-                    "Hold your follow-through position until the ball reaches the rim",
-                    "Keep your wrist snapped forward with fingers pointing down",
-                    "Maintain your arm extension in the follow-through position"
+                    "Keep your shooting arm fully extended until the ball reaches the rim",
+                    "Hold your wrist snapped forward with fingers pointing down toward the floor",
+                    "Do not drop your arm until after the ball hits the rim"
                 ],
-                "Form shooting from close range. Take 25 shots focusing on holding your follow-through until the ball hits the rim.",
-                "Hold the follow-through"
+                "Hold-through form shooting from 8 feet. Hold follow-through for 2 full seconds after each shot. Make 25 shots.",
+                "Hold it"
             ))
         
         return score
@@ -571,15 +571,15 @@ class BasketballAnalyzer(BaseAnalyzer):
             feedback.append(self.create_actionable_feedback(
                 "warning",
                 "wrist_snap",
-                "Your wrist snap is either too weak or too forceful.",
-                "An improper wrist snap affects ball rotation and can lead to inconsistent shot results.",
+                "Your wrist snap is either too weak or too aggressive at release.",
+                "An improper wrist snap affects ball rotation and backspin, leading to inconsistent shot results and poor ball control.",
                 [
-                    "Snap your wrist forward smoothly at the moment of release",
-                    "Let your fingers guide the ball with a natural forward motion",
-                    "Avoid forcing the snap or holding back too much"
+                    "Feel your wrist snap forward naturally as the ball leaves your fingers",
+                    "Let your fingers point down toward the floor at the end of your follow-through",
+                    "Feel consistent backspin on the ball when it leaves your hand"
                 ],
-                "Form shooting from close range. Take 30 shots focusing on the feel of your wrist snap at release.",
-                "Smooth snap, fingers through ball"
+                "Wrist-snap form shooting from 5 feet. Focus on feeling the snap at release. Make 30 shots concentrating on wrist action.",
+                "Snap it"
             ))
         
         return score
