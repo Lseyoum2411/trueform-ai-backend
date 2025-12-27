@@ -33,7 +33,7 @@ class BaseLiftAnalyzer(BaseAnalyzer, ABC):
         if depth_score >= 85:
             feedback.append(self.create_feedback("info", "Excellent depth achieved.", "depth"))
         elif depth_score < 60:
-            feedback.append(self.create_feedback("critical", "Insufficient depth. Go deeper for full range of motion.", "depth"))
+            feedback.append(self.create_feedback("critical", "Insufficient depth detected. Lower your hips until your thighs are parallel to the ground, or your hip crease is below your knee crease. Keep your chest up and core tight as you descend. Practice with bodyweight squats to build depth before adding weight.", "depth"))
         
         return depth_score, metric, feedback
     
@@ -60,7 +60,7 @@ class BaseLiftAnalyzer(BaseAnalyzer, ABC):
         if path_score >= 85:
             feedback.append(self.create_feedback("info", "Straight bar path maintained.", "bar_path"))
         elif path_score < 60:
-            feedback.append(self.create_feedback("warning", "Bar path deviates. Keep bar over mid-foot.", "bar_path"))
+            feedback.append(self.create_feedback("warning", "Bar path is deviating from ideal. Keep the bar directly over the middle of your foot throughout the entire lift. Think about dragging the bar close to your body - it should stay in contact with your legs during the movement. Practice with lighter weight focusing on maintaining a vertical bar path.", "bar_path"))
         
         return path_score, metric, feedback
     
@@ -88,7 +88,7 @@ class BaseLiftAnalyzer(BaseAnalyzer, ABC):
         if score >= 85:
             feedback.append(self.create_feedback("info", "Neutral spine maintained throughout.", "spine_alignment"))
         elif score < 60:
-            feedback.append(self.create_feedback("critical", "CRITICAL: Spine rounding detected. Maintain neutral spine.", "spine_alignment"))
+            feedback.append(self.create_feedback("critical", "CRITICAL: Spine rounding detected. Keep your chest up and shoulders back throughout the entire lift. Engage your core and maintain a slight arch in your lower back. If you cannot maintain a neutral spine, reduce the weight and focus on form. Consider doing core strengthening exercises to improve spinal stability.", "spine_alignment"))
         
         return score, metric, feedback
     
@@ -106,7 +106,7 @@ class BaseLiftAnalyzer(BaseAnalyzer, ABC):
         if tempo_score >= 85:
             feedback.append(self.create_feedback("info", "Good lifting tempo.", "tempo"))
         elif tempo_score < 60:
-            feedback.append(self.create_feedback("warning", "Tempo too fast or slow. Control the movement.", "tempo"))
+            feedback.append(self.create_feedback("warning", "Your lifting tempo needs adjustment. Control the descent for 2-3 seconds, pause briefly at the bottom, then explode up with control. Avoid bouncing or rushing the movement. Practice with a 2-1-2 tempo: 2 seconds down, 1 second pause, 2 seconds up.", "tempo"))
         
         return tempo_score, metric, feedback
     
@@ -127,9 +127,27 @@ class BaseLiftAnalyzer(BaseAnalyzer, ABC):
         if angle_score >= 85:
             feedback.append(self.create_feedback("info", f"Good {joint_name} angle.", joint_name))
         elif angle_score < 60:
-            feedback.append(self.create_feedback("warning", f"{joint_name} angle outside ideal range.", joint_name))
+            # Provide specific, actionable feedback based on joint type
+            if "knee" in joint_name.lower():
+                if avg_angle > ideal_angle:
+                    feedback.append(self.create_feedback("warning", f"Your {joint_name} is too straight (hyperextended). Maintain a slight bend in your knees throughout the movement. Think about keeping soft knees rather than locking them out. This will help protect your joints and improve movement efficiency.", joint_name))
+                else:
+                    feedback.append(self.create_feedback("warning", f"Your {joint_name} bend is insufficient. Increase knee flexion to achieve proper depth and muscle activation. Focus on pushing your knees out and sitting back into the movement.", joint_name))
+            elif "hip" in joint_name.lower():
+                if avg_angle > ideal_angle:
+                    feedback.append(self.create_feedback("warning", f"Your {joint_name} is too extended. Hinge at the hips more by pushing your hips back and keeping your back straight. Think about closing the angle between your torso and thighs to activate your posterior chain.", joint_name))
+                else:
+                    feedback.append(self.create_feedback("warning", f"Your {joint_name} flexion is excessive. Maintain a more neutral hip position by keeping your pelvis in proper alignment. Engage your core to stabilize your hips.", joint_name))
+            elif "elbow" in joint_name.lower():
+                if avg_angle > ideal_angle:
+                    feedback.append(self.create_feedback("warning", f"Your {joint_name} is too straight. Keep a slight bend in your elbows to maintain tension and protect the joint. Avoid locking out completely at the top of the movement.", joint_name))
+                else:
+                    feedback.append(self.create_feedback("warning", f"Your {joint_name} is too bent. Extend your arms more fully through the movement while maintaining control. Think about driving your elbows back and fully extending at the top.", joint_name))
+            else:
+                feedback.append(self.create_feedback("warning", f"{joint_name} angle is outside the ideal range of {ideal_angle - tolerance:.0f}-{ideal_angle + tolerance:.0f} degrees. Your current angle is {avg_angle:.1f} degrees. Focus on adjusting your positioning to bring this joint into the optimal range for this lift.", joint_name))
         
         return angle_score, metric, feedback
+
 
 
 
