@@ -22,14 +22,14 @@ class BasketballAnalyzer(BaseAnalyzer):
         landmarks_list = [frame.get("landmarks", {}) for frame in pose_data]
         angles_list = [frame.get("angles", {}) for frame in pose_data]
         
-        base_stability_score = self._analyze_base_stability(landmarks_list, metrics, feedback)
+        base_stability_score = self._analyze_base_stability(landmarks_list, metrics, feedback, strengths)
         vertical_alignment_score = self._analyze_vertical_alignment(landmarks_list, metrics, feedback)
-        shot_rhythm_score = self._analyze_shot_rhythm(pose_data, metrics, feedback)
+        shot_rhythm_score = self._analyze_shot_rhythm(pose_data, metrics, feedback, strengths)
         one_motion_flow_score = self._analyze_one_motion_flow(angles_list, metrics, feedback)
-        release_speed_score = self._analyze_release_speed(pose_data, metrics, feedback)
+        release_speed_score = self._analyze_release_speed(pose_data, metrics, feedback, strengths)
         knee_bend_score = self._analyze_knee_bend(angles_list, metrics, feedback)
         hip_alignment_score = self._analyze_hip_alignment(landmarks_list, metrics, feedback)
-        elbow_alignment_score = self._analyze_elbow_alignment(landmarks_list, angles_list, metrics, feedback)
+        elbow_alignment_score = self._analyze_elbow_alignment(landmarks_list, angles_list, metrics, feedback, strengths)
         shooting_pocket_score = self._analyze_shooting_pocket(landmarks_list, metrics, feedback)
         release_point_score = self._analyze_release_point(landmarks_list, metrics, feedback)
         shot_arc_score = self._analyze_shot_arc(landmarks_list, metrics, feedback)
@@ -64,7 +64,7 @@ class BasketballAnalyzer(BaseAnalyzer):
             created_at=datetime.now(),
         )
     
-    def _analyze_base_stability(self, landmarks_list: List[Dict], metrics: List, feedback: List) -> float:
+    def _analyze_base_stability(self, landmarks_list: List[Dict], metrics: List, feedback: List, strengths: List) -> float:
         if not landmarks_list:
             return 50.0
         
@@ -113,7 +113,7 @@ class BasketballAnalyzer(BaseAnalyzer):
         
         return score
     
-    def _analyze_shot_rhythm(self, pose_data: List[Dict], metrics: List, feedback: List) -> float:
+    def _analyze_shot_rhythm(self, pose_data: List[Dict], metrics: List, feedback: List, strengths: List) -> float:
         if len(pose_data) < 10:
             return 50.0
         
@@ -175,7 +175,7 @@ class BasketballAnalyzer(BaseAnalyzer):
         
         return score
     
-    def _analyze_release_speed(self, pose_data: List[Dict], metrics: List, feedback: List) -> float:
+    def _analyze_release_speed(self, pose_data: List[Dict], metrics: List, feedback: List, strengths: List) -> float:
         if len(pose_data) < 5:
             return 50.0
         
@@ -260,7 +260,7 @@ class BasketballAnalyzer(BaseAnalyzer):
         
         return score
     
-    def _analyze_elbow_alignment(self, landmarks_list: List[Dict], angles_list: List[Dict], metrics: List, feedback: List) -> float:
+    def _analyze_elbow_alignment(self, landmarks_list: List[Dict], angles_list: List[Dict], metrics: List, feedback: List, strengths: List) -> float:
         if not landmarks_list or not angles_list:
             return 50.0
         
