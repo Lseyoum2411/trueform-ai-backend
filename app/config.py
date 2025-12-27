@@ -26,36 +26,44 @@ def get_settings() -> Settings:
 
 settings = get_settings()
 
-SUPPORTED_SPORTS = ["basketball", "golf", "weightlifting", "baseball"]
+# SUPPORTED_SPORTS defined here
+SUPPORTED_SPORTS = ["basketball", "golf", "weightlifting", "baseball", "soccer", "track_field", "volleyball"]
 
-EXERCISE_TYPES = {
-    "basketball": ["jumpshot"],
-    "golf": ["driver", "fairway", "chip", "putt"],
-    "weightlifting": [
-        "back_squat", "front_squat", "deadlift", "rdl",
-        "bench_press", "barbell_row", "dumbbell_row", "rear_delt_flies", "lat_pulldown"
-    ],
-    "baseball": ["pitching", "batting", "catcher", "fielding"],
-}
+# Build EXERCISE_TYPES from movement registry (no circular dependency since registry doesn't import config)
+from app.core.movements_registry import MOVEMENTS_REGISTRY
+
+EXERCISE_TYPES = {}
+for sport_id, movements in MOVEMENTS_REGISTRY.items():
+    EXERCISE_TYPES[sport_id] = [movement.movement_id for movement in movements]
 
 EXERCISE_ALIASES = {
-    "squat": "back_squat",
+    "squat": "barbell_squat",
+    "back_squat": "barbell_squat",
     "bench": "bench_press",
     "row": "barbell_row",
     "db_row": "dumbbell_row",
     "dumbbell_row": "dumbbell_row",
     "pulldown": "lat_pulldown",
+    "rdl": "romanian_deadlift",
+    # Golf legacy mappings
+    "driver": "driver_swing",
+    "fairway": "iron_swing",
+    "chip": "chip_shot",
+    "putt": "putting_stroke",
+    # Basketball legacy mappings
+    "jumpshot": "shot_off_dribble",
 }
 
+# Weightlifting movement to analyzer mapping (normalized IDs)
 LIFT_TYPE_MAPPING = {
-    "back_squat": "back_squat",
+    "barbell_squat": "back_squat",  # Maps to existing analyzer
+    "back_squat": "back_squat",  # Legacy support
     "front_squat": "front_squat",
     "deadlift": "deadlift",
-    "rdl": "rdl",
+    "romanian_deadlift": "rdl",  # Maps to existing RDL analyzer
+    "rdl": "rdl",  # Legacy support
     "bench_press": "bench_press",
     "barbell_row": "barbell_row",
     "dumbbell_row": "dumbbell_row",
-    "rear_delt_flies": "rear_delt_flies",
     "lat_pulldown": "lat_pulldown",
 }
-

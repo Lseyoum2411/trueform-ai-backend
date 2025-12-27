@@ -1,70 +1,54 @@
 from fastapi import APIRouter, HTTPException
 from app.models.sport import Sport, ExerciseType
-from app.config import SUPPORTED_SPORTS, EXERCISE_TYPES
+from app.config import SUPPORTED_SPORTS
+from app.core.movements_registry import MOVEMENTS_REGISTRY, get_movements_for_sport
 
 router = APIRouter()
 
 
 @router.get("", response_model=list[Sport])
 async def get_sports():
-    golf_exercises = [
-        ExerciseType(id="driver", name="Driver", description="Full power drive from tee"),
-        ExerciseType(id="fairway", name="Fairway Wood", description="Long distance fairway shot"),
-        ExerciseType(id="chip", name="Chip Shot", description="Short approach shot near green"),
-        ExerciseType(id="putt", name="Putt", description="Putting stroke on green"),
-    ]
+    """Get all supported sports with their movements from the registry."""
+    sports_data = []
     
-    weightlifting_exercises = [
-        ExerciseType(id="back_squat", name="Back Squat", description="Barbell on upper back, full depth squat"),
-        ExerciseType(id="front_squat", name="Front Squat", description="Barbell on front shoulders, squat"),
-        ExerciseType(id="deadlift", name="Deadlift", description="Lift bar from ground to standing"),
-        ExerciseType(id="rdl", name="Romanian Deadlift", description="Hip hinge movement with straight legs"),
-        ExerciseType(id="bench_press", name="Bench Press", description="Horizontal press on bench"),
-        ExerciseType(id="barbell_row", name="Barbell Row", description="Bent-over rowing movement"),
-        ExerciseType(id="dumbbell_row", name="Dumbbell Row", description="Single or two-arm dumbbell row"),
-        ExerciseType(id="rear_delt_flies", name="Rear Delt Flies", description="Rear deltoid isolation exercise"),
-        ExerciseType(id="lat_pulldown", name="Lat Pulldown", description="Vertical pulling movement"),
-    ]
+    # Sport descriptions
+    sport_descriptions = {
+        "basketball": "Analyze shooting form and mechanics",
+        "golf": "Analyze golf swing mechanics and posture",
+        "weightlifting": "Analyze form for various lifts",
+        "baseball": "Analyze baseball form and mechanics",
+        "soccer": "Analyze soccer technique and form",
+        "track_field": "Analyze running form and sprint mechanics",
+        "volleyball": "Analyze volleyball technique and form",
+    }
     
-    baseball_exercises = [
-        ExerciseType(id="pitching", name="Pitching", description="Analyze pitching form and mechanics"),
-        ExerciseType(id="batting", name="Batting", description="Analyze batting stance and swing"),
-        ExerciseType(id="catcher", name="Catcher", description="Analyze catching form and positioning"),
-        ExerciseType(id="fielding", name="Fielding", description="Analyze fielding stance and mechanics"),
-    ]
+    # Build sports from registry
+    for sport_id in SUPPORTED_SPORTS:
+        movements = get_movements_for_sport(sport_id)
+        
+        # Convert MovementDefinition to ExerciseType
+        exercise_types = [
+            ExerciseType(
+                id=movement.movement_id,
+                name=movement.display_name,
+                description=movement.description
+            )
+            for movement in movements
+        ]
+        
+        # Basketball requires exercise_type but has default
+        requires_exercise_type = sport_id != "basketball" or len(exercise_types) > 1
+        
+        sports_data.append(
+            Sport(
+                id=sport_id,
+                name=sport_id.replace("_", " ").title(),
+                description=sport_descriptions.get(sport_id, f"Analyze {sport_id.replace('_', ' ')} form"),
+                requires_exercise_type=requires_exercise_type,
+                exercise_types=exercise_types,
+            )
+        )
     
-    sports_data = [
-        Sport(
-            id="basketball",
-            name="Basketball",
-            description="Analyze jump shot form using Steph Curry and Lethal Shooter biomechanics",
-            requires_exercise_type=False,
-            exercise_types=[
-                ExerciseType(id="jumpshot", name="Jump Shot", description="Standard jump shot form analysis")
-            ],
-        ),
-        Sport(
-            id="golf",
-            name="Golf",
-            description="Analyze golf swing mechanics and posture",
-            requires_exercise_type=True,
-            exercise_types=golf_exercises,
-        ),
-        Sport(
-            id="weightlifting",
-            name="Weightlifting",
-            description="Analyze form for various lifts",
-            requires_exercise_type=True,
-            exercise_types=weightlifting_exercises,
-        ),
-        Sport(
-            id="baseball",
-            name="Baseball",
-            description="Analyze baseball form and mechanics",
-            requires_exercise_type=True,
-            exercise_types=baseball_exercises,
-        ),
-    ]
     return sports_data
 
 
@@ -73,66 +57,35 @@ async def get_sport(sport_id: str):
     if sport_id not in SUPPORTED_SPORTS:
         raise HTTPException(status_code=404, detail="Sport not found")
     
-    golf_exercises = [
-        ExerciseType(id="driver", name="Driver", description="Full power drive from tee"),
-        ExerciseType(id="fairway", name="Fairway Wood", description="Long distance fairway shot"),
-        ExerciseType(id="chip", name="Chip Shot", description="Short approach shot near green"),
-        ExerciseType(id="putt", name="Putt", description="Putting stroke on green"),
+    movements = get_movements_for_sport(sport_id)
+    
+    # Convert MovementDefinition to ExerciseType
+    exercise_types = [
+        ExerciseType(
+            id=movement.movement_id,
+            name=movement.display_name,
+            description=movement.description
+        )
+        for movement in movements
     ]
     
-    weightlifting_exercises = [
-        ExerciseType(id="back_squat", name="Back Squat", description="Barbell on upper back, full depth squat"),
-        ExerciseType(id="front_squat", name="Front Squat", description="Barbell on front shoulders, squat"),
-        ExerciseType(id="deadlift", name="Deadlift", description="Lift bar from ground to standing"),
-        ExerciseType(id="rdl", name="Romanian Deadlift", description="Hip hinge movement with straight legs"),
-        ExerciseType(id="bench_press", name="Bench Press", description="Horizontal press on bench"),
-        ExerciseType(id="barbell_row", name="Barbell Row", description="Bent-over rowing movement"),
-        ExerciseType(id="dumbbell_row", name="Dumbbell Row", description="Single or two-arm dumbbell row"),
-        ExerciseType(id="rear_delt_flies", name="Rear Delt Flies", description="Rear deltoid isolation exercise"),
-        ExerciseType(id="lat_pulldown", name="Lat Pulldown", description="Vertical pulling movement"),
-    ]
+    sport_descriptions = {
+        "basketball": "Analyze shooting form and mechanics",
+        "golf": "Analyze golf swing mechanics and posture",
+        "weightlifting": "Analyze form for various lifts",
+        "baseball": "Analyze baseball form and mechanics",
+        "soccer": "Analyze soccer technique and form",
+        "track_field": "Analyze running form and sprint mechanics",
+        "volleyball": "Analyze volleyball technique and form",
+    }
     
-    baseball_exercises = [
-        ExerciseType(id="pitching", name="Pitching", description="Analyze pitching form and mechanics"),
-        ExerciseType(id="batting", name="Batting", description="Analyze batting stance and swing"),
-        ExerciseType(id="catcher", name="Catcher", description="Analyze catching form and positioning"),
-        ExerciseType(id="fielding", name="Fielding", description="Analyze fielding stance and mechanics"),
-    ]
+    requires_exercise_type = sport_id != "basketball" or len(exercise_types) > 1
     
-    if sport_id == "basketball":
-        return Sport(
-            id="basketball",
-            name="Basketball",
-            description="Analyze jump shot form using Steph Curry and Lethal Shooter biomechanics",
-            requires_exercise_type=False,
-            exercise_types=[
-                ExerciseType(id="jumpshot", name="Jump Shot", description="Standard jump shot form analysis")
-            ],
-        )
-    elif sport_id == "golf":
-        return Sport(
-            id="golf",
-            name="Golf",
-            description="Analyze golf swing mechanics and posture",
-            requires_exercise_type=True,
-            exercise_types=golf_exercises,
-        )
-    elif sport_id == "weightlifting":
-        return Sport(
-            id="weightlifting",
-            name="Weightlifting",
-            description="Analyze form for various lifts",
-            requires_exercise_type=True,
-            exercise_types=weightlifting_exercises,
-        )
-    elif sport_id == "baseball":
-        return Sport(
-            id="baseball",
-            name="Baseball",
-            description="Analyze baseball form and mechanics",
-            requires_exercise_type=True,
-            exercise_types=baseball_exercises,
-        )
-    
-    raise HTTPException(status_code=404, detail="Sport not found")
+    return Sport(
+        id=sport_id,
+        name=sport_id.replace("_", " ").title(),
+        description=sport_descriptions.get(sport_id, f"Analyze {sport_id.replace('_', ' ')} form"),
+        requires_exercise_type=requires_exercise_type,
+        exercise_types=exercise_types,
+    )
 

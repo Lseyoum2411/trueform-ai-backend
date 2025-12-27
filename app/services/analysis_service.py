@@ -8,8 +8,12 @@ from app.core.analyzers.basketball import BasketballAnalyzer
 from app.core.analyzers.golf import GolfAnalyzer
 from app.core.analyzers.weightlifting import WeightliftingAnalyzer
 from app.core.analyzers.baseball import BaseballAnalyzer
+from app.core.analyzers.soccer import SoccerAnalyzer
+from app.core.analyzers.track_field import TrackFieldAnalyzer
+from app.core.analyzers.volleyball import VolleyballAnalyzer
 from app.models.analysis import AnalysisResult, Feedback, FeedbackItem, MetricScore
 from app.config import settings
+from app.core.movements_registry import normalize_movement_id
 
 logger = logging.getLogger(__name__)
 
@@ -303,20 +307,56 @@ class AnalysisService:
             return error_result
         
         try:
+            # Normalize movement/exercise type ID using registry
+            normalized_exercise_type = None
+            if exercise_type:
+                normalized_exercise_type = normalize_movement_id(sport, exercise_type)
+            
             # Route to appropriate analyzer
             if sport == "basketball":
+                # Basketball doesn't use exercise_type in analyzer (uses single analyzer)
                 raw_result = await self.basketball_analyzer.analyze(pose_data)
+                # Update exercise_type in result to normalized value
+                if normalized_exercise_type:
+                    raw_result.exercise_type = normalized_exercise_type
             elif sport == "golf":
-                shot_type = exercise_type or "driver"
+                # Normalize golf shot types (driver -> driver_swing, etc.)
+                shot_type = normalized_exercise_type or "driver_swing"
+                # Map back to analyzer's expected format
+                if shot_type == "driver_swing":
+                    shot_type = "driver"
+                elif shot_type == "iron_swing":
+                    shot_type = "iron"
+                elif shot_type == "chip_shot":
+                    shot_type = "chip"
+                elif shot_type == "putting_stroke":
+                    shot_type = "putt"
                 golf_analyzer = GolfAnalyzer(shot_type=shot_type)
                 raw_result = await golf_analyzer.analyze(pose_data)
             elif sport == "weightlifting":
-                lift_type = exercise_type or "back_squat"
-                raw_result = await self.weightlifting_analyzer.analyze(pose_data, lift_type=lift_type)
+                lift_type = normalized_exercise_type or "barbell_squat"
+                # Map normalized ID to analyzer's expected format
+                from app.config import LIFT_TYPE_MAPPING
+                analyzer_lift_type = LIFT_TYPE_MAPPING.get(lift_type, lift_type)
+                raw_result = await self.weightlifting_analyzer.analyze(pose_data, lift_type=analyzer_lift_type)
+                # Store normalized exercise_type
+                raw_result.exercise_type = lift_type
             elif sport == "baseball":
-                exercise_type_for_analyzer = exercise_type or "pitching"
+                exercise_type_for_analyzer = normalized_exercise_type or "pitching"
                 baseball_analyzer = BaseballAnalyzer(exercise_type=exercise_type_for_analyzer)
                 raw_result = await baseball_analyzer.analyze(pose_data)
+            elif sport == "soccer":
+                movement_type = normalized_exercise_type or "shooting_technique"
+                soccer_analyzer = SoccerAnalyzer(movement_type=movement_type)
+                raw_result = await soccer_analyzer.analyze(pose_data)
+            elif sport == "track_field":
+                movement_type = normalized_exercise_type or "sprint_start"
+                track_analyzer = TrackFieldAnalyzer(movement_type=movement_type)
+                raw_result = await track_analyzer.analyze(pose_data)
+            elif sport == "volleyball":
+                movement_type = normalized_exercise_type or "spike_approach"
+                volleyball_analyzer = VolleyballAnalyzer(movement_type=movement_type)
+                raw_result = await volleyball_analyzer.analyze(pose_data)
             else:
                 raise ValueError(f"Unsupported sport: {sport}")
             

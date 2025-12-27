@@ -4,6 +4,7 @@ from app.models.video import VideoUpload, VideoStatusResponse
 from app.models.analysis import AnalysisResult
 from app.services.analysis_service import AnalysisService
 from app.config import settings, SUPPORTED_SPORTS, EXERCISE_TYPES, EXERCISE_ALIASES
+from app.core.movements_registry import normalize_movement_id, get_movements_for_sport
 from app.utils.status_helper import update_video_status, video_statuses, analysis_results
 from app.utils.rate_limiter import can_start_analysis, start_analysis, finish_analysis
 from app.core.pose_estimator import PoseEstimator
@@ -125,25 +126,35 @@ async def upload_video(
         )
     
     # Validate exercise_type based on sport requirements
+    # Get valid movements from registry
+    valid_movements = get_movements_for_sport(sport)
+    valid_movement_ids = [m.movement_id for m in valid_movements]
+    
     if sport == "basketball":
-        exercise_type = "jumpshot"
-    elif sport in ["golf", "weightlifting", "baseball"]:
+        # Basketball requires exercise_type but defaults to shot_off_dribble
+        if not exercise_type:
+            exercise_type = "shot_off_dribble"
+        # Normalize legacy jumpshot -> shot_off_dribble
+        exercise_type = normalize_movement_id(sport, exercise_type)
+    elif sport in ["golf", "weightlifting", "baseball", "soccer", "track_field", "volleyball"]:
         if not exercise_type:
             raise HTTPException(
                 status_code=400,
-                detail=f"exercise_type is required for {sport}. Valid options: {', '.join(EXERCISE_TYPES.get(sport, []))}"
+                detail=f"exercise_type is required for {sport}. Valid options: {', '.join(valid_movement_ids)}"
             )
         
-        # Handle aliases
+        # Normalize movement ID using registry
+        exercise_type = normalize_movement_id(sport, exercise_type)
+        
+        # Handle aliases (after normalization)
         if exercise_type in EXERCISE_ALIASES:
             exercise_type = EXERCISE_ALIASES[exercise_type]
         
-        # Validate exercise_type against sport
-        valid_exercises = EXERCISE_TYPES.get(sport, [])
-        if exercise_type not in valid_exercises:
+        # Validate exercise_type against sport movements
+        if exercise_type not in valid_movement_ids:
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid exercise_type '{exercise_type}' for sport '{sport}'. Valid options: {', '.join(valid_exercises)}"
+                detail=f"Invalid exercise_type '{exercise_type}' for sport '{sport}'. Valid options: {', '.join(valid_movement_ids)}"
             )
     
     video_id = str(uuid.uuid4())
