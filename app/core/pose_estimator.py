@@ -162,18 +162,57 @@ class PoseEstimator:
     def process_video(self, video_path: str) -> List[Dict]:
         return self.analyze_video(video_path)
     
-    def analyze_video(self, video_path: str) -> List[Dict]:
-        frames = self.extract_frames(video_path)
-        pose_data = []
+    def analyze_video(self, video_path: str, max_frames: Optional[int] = None, sample_rate: int = 1) -> List[Dict]:
+        """
+        Analyze video and extract pose data frame by frame to avoid loading all frames into memory.
         
-        for frame in frames:
-            landmarks = self.get_landmarks(frame)
-            if landmarks:
-                angles = self.get_joint_angles(landmarks)
-                pose_data.append({
-                    "landmarks": landmarks,
-                    "angles": angles,
-                })
+        Args:
+            video_path: Path to video file
+            max_frames: Maximum number of frames to process (None = all frames)
+            sample_rate: Process every Nth frame (1 = all frames, 2 = every other frame, etc.)
+        
+        Returns:
+            List of pose data dictionaries with landmarks and angles
+        """
+        cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            return []
+        
+        pose_data = []
+        frame_count = 0
+        processed_count = 0
+        
+        try:
+            # Get FPS to calculate max frames if needed (limit to ~60 seconds max at 30fps = 1800 frames)
+            fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+            if not max_frames:
+                # Default: limit to 1800 frames (60 seconds at 30fps) to prevent OOM
+                max_frames = int(min(1800, fps * 60))
+            
+            while cap.isOpened():
+                ret, frame = cap.read()
+                if not ret:
+                    break
+                
+                # Sample frames based on sample_rate
+                if frame_count % sample_rate == 0:
+                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    landmarks = self.get_landmarks(frame_rgb)
+                    
+                    if landmarks:
+                        angles = self.get_joint_angles(landmarks)
+                        pose_data.append({
+                            "landmarks": landmarks,
+                            "angles": angles,
+                        })
+                    
+                    processed_count += 1
+                    if processed_count >= max_frames:
+                        break
+                
+                frame_count += 1
+        finally:
+            cap.release()
         
         return pose_data
     

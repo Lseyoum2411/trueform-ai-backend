@@ -54,10 +54,18 @@ async def process_video_analysis(video_id: str, video_path: str, sport: str, exe
         logger.info(f"Video file found, initializing pose estimation for {video_id}")
         
         pose_estimator = PoseEstimator()
-        update_video_status(video_id, "processing", progress=30.0)
-        
-        pose_data = pose_estimator.analyze_video(video_path)
-        update_video_status(video_id, "processing", progress=60.0)
+        try:
+            update_video_status(video_id, "processing", progress=30.0)
+            
+            # Process video with memory-efficient frame-by-frame processing
+            # Limit to 1800 frames max (60 seconds at 30fps) to prevent OOM
+            pose_data = pose_estimator.analyze_video(video_path, max_frames=1800, sample_rate=1)
+            update_video_status(video_id, "processing", progress=60.0)
+        finally:
+            # Explicitly clean up MediaPipe pose estimator to free memory
+            if hasattr(pose_estimator, 'pose'):
+                pose_estimator.pose.close()
+            del pose_estimator
         
         if not pose_data:
             raise ValueError("No pose data extracted from video. Ensure person is visible and video is valid.")
