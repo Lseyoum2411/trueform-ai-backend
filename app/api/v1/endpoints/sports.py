@@ -69,6 +69,30 @@ async def get_sport(sport_id: str):
         raise HTTPException(status_code=404, detail="Sport not found")
     
     movements = get_movements_for_sport(sport_id)
+    if not movements:
+        raise HTTPException(status_code=404, detail="Sport not found or no movements defined")
+    
+    # Sport display names (for proper formatting)
+    sport_display_names = {
+        "basketball": "Basketball",
+        "golf": "Golf",
+        "weightlifting": "Weightlifting",
+        "baseball": "Baseball",
+        "soccer": "Soccer",
+        "track_field": "Track and Field",
+        "volleyball": "Volleyball",
+    }
+    
+    # Sport descriptions
+    sport_descriptions = {
+        "basketball": "Analyze shooting form and mechanics",
+        "golf": "Analyze golf swing mechanics and posture",
+        "weightlifting": "Analyze form for various lifts",
+        "baseball": "Analyze baseball form and mechanics",
+        "soccer": "Analyze soccer technique and form",
+        "track_field": "Analyze running form and sprint mechanics",
+        "volleyball": "Analyze volleyball technique and form",
+    }
     
     # Convert MovementDefinition to ExerciseType
     exercise_types = [
@@ -80,21 +104,11 @@ async def get_sport(sport_id: str):
         for movement in movements
     ]
     
-    sport_descriptions = {
-        "basketball": "Analyze shooting form and mechanics",
-        "golf": "Analyze golf swing mechanics and posture",
-        "weightlifting": "Analyze form for various lifts",
-        "baseball": "Analyze baseball form and mechanics",
-        "soccer": "Analyze soccer technique and form",
-        "track_field": "Analyze running form and sprint mechanics",
-        "volleyball": "Analyze volleyball technique and form",
-    }
-    
     requires_exercise_type = sport_id != "basketball" or len(exercise_types) > 1
     
     return Sport(
         id=sport_id,
-        name=sport_id.replace("_", " ").title(),
+        name=sport_display_names.get(sport_id, sport_id.replace("_", " ").title()),
         description=sport_descriptions.get(sport_id, f"Analyze {sport_id.replace('_', ' ')} form"),
         requires_exercise_type=requires_exercise_type,
         exercise_types=exercise_types,
