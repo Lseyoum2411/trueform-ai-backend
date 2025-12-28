@@ -195,13 +195,6 @@ MOVEMENTS_REGISTRY: Dict[str, List[MovementDefinition]] = {
             requires_equipment=True,
             key_phases=["positioning", "first_touch", "control", "setup"]
         ),
-        MovementDefinition(
-            movement_id="standing_tackle",
-            display_name="Standing Tackle",
-            description="Defensive tackle while maintaining balance",
-            requires_equipment=True,
-            key_phases=["approach", "balance", "contact", "follow_through"]
-        ),
     ],
     "track_field": [
         MovementDefinition(
