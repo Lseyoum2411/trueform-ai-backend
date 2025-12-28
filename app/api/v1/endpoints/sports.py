@@ -22,6 +22,17 @@ async def get_sports():
         "volleyball": "Analyze volleyball technique and form",
     }
     
+    # Sport display names (for proper formatting)
+    sport_display_names = {
+        "basketball": "Basketball",
+        "golf": "Golf",
+        "weightlifting": "Weightlifting",
+        "baseball": "Baseball",
+        "soccer": "Soccer",
+        "track_field": "Track and Field",
+        "volleyball": "Volleyball",
+    }
+    
     # Build sports from registry
     for sport_id in SUPPORTED_SPORTS:
         movements = get_movements_for_sport(sport_id)
@@ -42,7 +53,7 @@ async def get_sports():
         sports_data.append(
             Sport(
                 id=sport_id,
-                name=sport_id.replace("_", " ").title(),
+                name=sport_display_names.get(sport_id, sport_id.replace("_", " ").title()),
                 description=sport_descriptions.get(sport_id, f"Analyze {sport_id.replace('_', ' ')} form"),
                 requires_exercise_type=requires_exercise_type,
                 exercise_types=exercise_types,
