@@ -189,8 +189,8 @@ MOVEMENTS_REGISTRY: Dict[str, List[MovementDefinition]] = {
             key_phases=["approach", "touch", "acceleration", "control"]
         ),
         MovementDefinition(
-            movement_id="receiving",
-            display_name="Receiving",
+            movement_id="first_touch",
+            display_name="First Touch",
             description="Controlling the ball when receiving a pass",
             requires_equipment=True,
             key_phases=["positioning", "first_touch", "control", "setup"]
