@@ -20,6 +20,7 @@ async def get_sports():
         "soccer": "Analyze soccer technique and form",
         "track_field": "Analyze running form and sprint mechanics",
         "volleyball": "Analyze volleyball technique and form",
+        "lacrosse": "Analyze lacrosse technique and form",
     }
     
     # Sport display names (for proper formatting)
@@ -31,6 +32,7 @@ async def get_sports():
         "soccer": "Soccer",
         "track_field": "Track and Field",
         "volleyball": "Volleyball",
+        "lacrosse": "Lacrosse",
     }
     
     # Build sports from registry
@@ -81,6 +83,7 @@ async def get_sport(sport_id: str):
         "soccer": "Soccer",
         "track_field": "Track and Field",
         "volleyball": "Volleyball",
+        "lacrosse": "Lacrosse",
     }
     
     # Sport descriptions
@@ -92,6 +95,7 @@ async def get_sport(sport_id: str):
         "soccer": "Analyze soccer technique and form",
         "track_field": "Analyze running form and sprint mechanics",
         "volleyball": "Analyze volleyball technique and form",
+        "lacrosse": "Analyze lacrosse technique and form",
     }
     
     # Convert MovementDefinition to ExerciseType

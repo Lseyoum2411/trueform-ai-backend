@@ -218,6 +218,43 @@ MOVEMENTS_REGISTRY: Dict[str, List[MovementDefinition]] = {
             requires_equipment=False,
             key_phases=["upright_position", "ground_contact", "push_off", "recovery"]
         ),
+        MovementDefinition(
+            movement_id="shot_put",
+            display_name="Shot Put",
+            description="Analyze lower-body drive, hip rotation, and release mechanics",
+            requires_equipment=True,
+            key_phases=["setup", "glide", "rotation", "release", "follow-through"]
+        ),
+        MovementDefinition(
+            movement_id="discus_throw",
+            display_name="Discus Throw",
+            description="Analyze rotational balance, sequencing, and release angle",
+            requires_equipment=True,
+            key_phases=["setup", "windup", "rotation", "release", "follow-through"]
+        ),
+        MovementDefinition(
+            movement_id="javelin_throw",
+            display_name="Javelin Throw",
+            description="Analyze approach mechanics, torso separation, and throwing motion",
+            requires_equipment=True,
+            key_phases=["approach", "crossover", "plant", "release", "follow-through"]
+        ),
+        MovementDefinition(
+            movement_id="hurdle_technique",
+            display_name="Hurdle Technique",
+            description="Analyze lead-leg mechanics, clearance efficiency, and rhythm",
+            requires_equipment=True,
+            key_phases=["approach", "takeoff", "clearance", "landing", "recovery"]
+        ),
+    ],
+    "lacrosse": [
+        MovementDefinition(
+            movement_id="shooting",
+            display_name="Shooting",
+            description="Analyze lacrosse shooting mechanics, body alignment, rotational sequencing, and release mechanics",
+            requires_equipment=True,
+            key_phases=["setup", "windup", "rotation", "release", "follow-through"]
+        ),
     ],
     "volleyball": [
         MovementDefinition(

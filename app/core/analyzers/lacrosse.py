@@ -6,12 +6,12 @@ from app.core.analyzers.base import BaseAnalyzer
 from app.models.analysis import AnalysisResult, MetricScore, FeedbackItem
 
 
-class TrackFieldAnalyzer(BaseAnalyzer):
-    def __init__(self, movement_type: str = "sprint_start"):
+class LacrosseAnalyzer(BaseAnalyzer):
+    def __init__(self, movement_type: str = "shooting"):
         super().__init__()
         self.movement_type = movement_type.lower()
-        if self.movement_type not in ["sprint_start", "acceleration_phase", "max_velocity_sprint", "shot_put", "discus_throw", "javelin_throw", "hurdle_technique"]:
-            self.movement_type = "sprint_start"
+        if self.movement_type not in ["shooting"]:
+            self.movement_type = "shooting"
 
     async def analyze(self, pose_data: List[Dict]) -> AnalysisResult:
         if not pose_data:
@@ -30,14 +30,14 @@ class TrackFieldAnalyzer(BaseAnalyzer):
 
         feedback.append(self.create_feedback(
             "info",
-            f"Track & Field {self.movement_type.replace('_', ' ')} analysis completed. Detailed analysis coming soon.",
+            f"Lacrosse {self.movement_type.replace('_', ' ')} analysis completed. Detailed analysis coming soon.",
             "general"
         ))
 
         return AnalysisResult(
             analysis_id=str(uuid.uuid4()),
             video_id="",
-            sport="track_field",
+            sport="lacrosse",
             exercise_type=self.movement_type,
             overall_score=round(overall_score, 2),
             metrics=metrics,
@@ -52,7 +52,7 @@ class TrackFieldAnalyzer(BaseAnalyzer):
         return AnalysisResult(
             analysis_id=str(uuid.uuid4()),
             video_id="",
-            sport="track_field",
+            sport="lacrosse",
             exercise_type=self.movement_type,
             overall_score=0.0,
             metrics=[],

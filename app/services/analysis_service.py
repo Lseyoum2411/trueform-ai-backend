@@ -11,6 +11,7 @@ from app.core.analyzers.baseball import BaseballAnalyzer
 from app.core.analyzers.soccer import SoccerAnalyzer
 from app.core.analyzers.track_field import TrackFieldAnalyzer
 from app.core.analyzers.volleyball import VolleyballAnalyzer
+from app.core.analyzers.lacrosse import LacrosseAnalyzer
 from app.models.analysis import AnalysisResult, Feedback, FeedbackItem, MetricScore
 from app.config import settings
 from app.core.movements_registry import normalize_movement_id
@@ -357,6 +358,10 @@ class AnalysisService:
                 movement_type = normalized_exercise_type or "spike_approach"
                 volleyball_analyzer = VolleyballAnalyzer(movement_type=movement_type)
                 raw_result = await volleyball_analyzer.analyze(pose_data)
+            elif sport == "lacrosse":
+                movement_type = normalized_exercise_type or "shooting"
+                lacrosse_analyzer = LacrosseAnalyzer(movement_type=movement_type)
+                raw_result = await lacrosse_analyzer.analyze(pose_data)
             else:
                 raise ValueError(f"Unsupported sport: {sport}")
             

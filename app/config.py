@@ -27,7 +27,7 @@ def get_settings() -> Settings:
 settings = get_settings()
 
 # SUPPORTED_SPORTS defined here
-SUPPORTED_SPORTS = ["basketball", "golf", "weightlifting", "baseball", "soccer", "track_field", "volleyball"]
+SUPPORTED_SPORTS = ["basketball", "golf", "weightlifting", "baseball", "soccer", "track_field", "volleyball", "lacrosse"]
 
 # Build EXERCISE_TYPES from movement registry (no circular dependency since registry doesn't import config)
 from app.core.movements_registry import MOVEMENTS_REGISTRY
