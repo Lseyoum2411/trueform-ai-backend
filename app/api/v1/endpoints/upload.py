@@ -15,6 +15,7 @@ import cv2
 from typing import Optional
 import json
 import logging
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -192,6 +193,29 @@ async def upload_video(
     
     update_video_status(video_id, "queued", progress=0.0)
     logger.info(f"Video uploaded successfully, video_id: {video_id}, queued for background processing")
+    
+    # Track successful video upload in PostHog (non-blocking, errors are logged but don't fail upload)
+    if settings.POSTHOG_API_KEY:
+        try:
+            async with httpx.AsyncClient(timeout=2.0) as client:
+                await client.post(
+                    "https://app.posthog.com/capture/",
+                    json={
+                        "api_key": settings.POSTHOG_API_KEY,
+                        "event": "video_uploaded",
+                        "distinct_id": video_id,
+                        "properties": {
+                            "source": "backend",
+                            "platform": "web",
+                            "sport": sport,
+                            "exercise_type": exercise_type,
+                        },
+                    },
+                )
+                logger.debug(f"PostHog event captured for video_id: {video_id}")
+        except Exception as e:
+            # Log but don't fail upload if PostHog tracking fails
+            logger.warning(f"Failed to send PostHog event for video_id {video_id}: {e}")
     
     # Build status polling URL for frontend
     next_poll_url = f"{settings.API_PREFIX}/upload/status/{video_id}"

@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     MAX_VIDEO_DURATION_SEC: int = 60
     UPLOAD_DIR: str = "uploads"
     RESULTS_DIR: str = "results"
+    POSTHOG_API_KEY: str = ""
     
     class Config:
         env_file = ".env"
