@@ -195,25 +195,36 @@ async def upload_video(
     logger.info(f"Video uploaded successfully, video_id: {video_id}, queued for background processing")
     
     # Track successful video upload in PostHog (non-blocking, errors are logged but don't fail upload)
-    if settings.POSTHOG_API_KEY:
+    posthog_key = os.getenv("POSTHOG_API_KEY", "")
+    logger.info("=== PostHog Tracking ===")
+    logger.info(f"PostHog API Key present: {bool(posthog_key)}")
+    if posthog_key:
+        logger.info(f"PostHog API Key prefix: {posthog_key[:8]}...")
+    
+    if posthog_key:
         try:
-            async with httpx.AsyncClient(timeout=2.0) as client:
-                await client.post(
-                    "https://app.posthog.com/capture/",
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.post(
+                    "https://us.i.posthog.com/capture/",
                     json={
-                        "api_key": settings.POSTHOG_API_KEY,
+                        "api_key": posthog_key,
                         "event": "video_uploaded",
-                        "distinct_id": video_id,
                         "properties": {
+                            "distinct_id": video_id,
+                            "sport": sport,
+                            "exercise_type": exercise_type,
                             "source": "backend",
                             "platform": "web",
+                            "filename": video.filename if video.filename else "unknown",
                         },
                     },
                 )
-                logger.debug(f"PostHog event captured for video_id: {video_id}")
+                logger.info(f"PostHog event sent successfully - Status: {response.status_code}, Response: {response.text}")
         except Exception as e:
             # Log but don't fail upload if PostHog tracking fails
             logger.warning(f"Failed to send PostHog event for video_id {video_id}: {e}")
+    else:
+        logger.warning("PostHog API Key not configured, skipping event tracking")
     
     # Build status polling URL for frontend
     next_poll_url = f"{settings.API_PREFIX}/upload/status/{video_id}"

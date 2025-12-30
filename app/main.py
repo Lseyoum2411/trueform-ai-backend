@@ -1,5 +1,7 @@
 import os
 import logging
+import httpx
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,12 +28,56 @@ logger = logging.getLogger(__name__)
 PORT = int(os.getenv("PORT", 8000))
 logger.info(f"TrueForm AI initializing on port {PORT}")
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """PostHog startup diagnostics and application lifecycle management."""
+    # Startup: PostHog diagnostics
+    posthog_key = os.getenv("POSTHOG_API_KEY", "")
+    key_present = bool(posthog_key)
+    key_prefix = posthog_key[:8] if posthog_key else "N/A"
+    
+    logger.info(f"PostHog API Key present: {key_present}")
+    if key_present:
+        logger.info(f"PostHog API Key prefix: {key_prefix}...")
+    
+    # Test PostHog connection on startup
+    if posthog_key:
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.post(
+                    "https://us.i.posthog.com/capture/",
+                    json={
+                        "api_key": posthog_key,
+                        "event": "backend_startup_test",
+                        "properties": {
+                            "distinct_id": "backend_startup",
+                        },
+                    },
+                )
+                logger.info(f"PostHog connection test - Status: {response.status_code}, Response: {response.text}")
+                if response.status_code == 200:
+                    logger.info("PostHog connection successful")
+                else:
+                    logger.warning(f"PostHog connection test returned non-200 status: {response.status_code}")
+        except Exception as e:
+            logger.warning(f"PostHog connection test failed: {e}")
+    
+    logger.info("Application startup complete")
+    
+    yield  # Application runs here
+    
+    # Shutdown
+    logger.info("TrueForm AI shutting down")
+
+
 app = FastAPI(
     title="TrueForm AI",
     version="1.0.0",
     description="AI-powered sports form analysis",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 # ----------------------------------------------------
@@ -184,25 +230,13 @@ async def general_exception_handler(request: Request, exc: Exception):
     )
 
 # ----------------------------------------------------
-# Startup event — Optional pre-warm (NO registration)
+# Startup/Shutdown handled by lifespan context manager above
 # 
 # IMPORTANT: No heavy work allowed at import or startup.
 # - ML models (MediaPipe, OpenCV, analyzers) must be lazy-loaded
 # - Heavy imports must be deferred to request handlers or background tasks
-# - Startup event should only log, not initialize heavy resources
+# - Startup diagnostics should only log and test connections
 # ----------------------------------------------------
-
-@app.on_event("startup")
-async def startup_event():
-    logger.info("Application startup complete")
-
-# ----------------------------------------------------
-# Shutdown
-# ----------------------------------------------------
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    logger.info("TrueForm AI shutting down")
 
 # ----------------------------------------------------
 # Local run
