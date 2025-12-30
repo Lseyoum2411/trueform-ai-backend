@@ -19,9 +19,14 @@ class SquatAnalyzer(BaseLiftAnalyzer):
         strengths = []
         weaknesses = []
         
-        depth_score, depth_metric, depth_feedback = self.analyze_depth(landmarks_list, 0.7, "back_squat")
+        # High Priority: Depth and Knee Alignment
+        depth_score, depth_metric, depth_feedback = self.analyze_depth_squat(landmarks_list, 0.7)
         metrics.append(depth_metric)
         feedback.extend(depth_feedback)
+        
+        knee_alignment_score, knee_alignment_metric, knee_alignment_feedback = self.analyze_knee_alignment_squat(landmarks_list, angles_list)
+        metrics.append(knee_alignment_metric)
+        feedback.extend(knee_alignment_feedback)
         
         path_score, path_metric, path_feedback = self.analyze_bar_path(landmarks_list, "back_squat")
         metrics.append(path_metric)
@@ -35,16 +40,12 @@ class SquatAnalyzer(BaseLiftAnalyzer):
         metrics.append(tempo_metric)
         feedback.extend(tempo_feedback)
         
-        knee_score, knee_metric, knee_feedback = self.analyze_joint_angles(angles_list, "left_knee", 90.0, 15.0, "back_squat")
-        metrics.append(knee_metric)
-        feedback.extend(knee_feedback)
-        
         hip_score, hip_metric, hip_feedback = self.analyze_joint_angles(angles_list, "left_hip", 100.0, 20.0, "back_squat")
         metrics.append(hip_metric)
         feedback.extend(hip_feedback)
         
         overall_score = np.mean([
-            depth_score, path_score, spine_score, tempo_score, knee_score, hip_score
+            depth_score, knee_alignment_score, path_score, spine_score, tempo_score, hip_score
         ])
         
         for metric in metrics:

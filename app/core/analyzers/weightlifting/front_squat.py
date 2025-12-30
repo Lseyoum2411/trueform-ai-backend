@@ -19,6 +19,11 @@ class FrontSquatAnalyzer(BaseLiftAnalyzer):
         strengths = []
         weaknesses = []
         
+        # High Priority: Elbows Up and Chest Up
+        elbow_position_score, elbow_position_metric, elbow_position_feedback = self.analyze_elbow_position_front_squat(landmarks_list, angles_list)
+        metrics.append(elbow_position_metric)
+        feedback.extend(elbow_position_feedback)
+        
         depth_score, depth_metric, depth_feedback = self.analyze_depth(landmarks_list, 0.75, "front_squat")
         metrics.append(depth_metric)
         feedback.extend(depth_feedback)
@@ -39,12 +44,8 @@ class FrontSquatAnalyzer(BaseLiftAnalyzer):
         metrics.append(knee_metric)
         feedback.extend(knee_feedback)
         
-        elbow_score, elbow_metric, elbow_feedback = self.analyze_joint_angles(angles_list, "left_elbow", 45.0, 20.0, "front_squat")
-        metrics.append(elbow_metric)
-        feedback.extend(elbow_feedback)
-        
         overall_score = np.mean([
-            depth_score, path_score, spine_score, tempo_score, knee_score, elbow_score
+            elbow_position_score, depth_score, path_score, spine_score, tempo_score, knee_score
         ])
         
         for metric in metrics:

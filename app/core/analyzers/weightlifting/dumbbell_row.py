@@ -19,6 +19,11 @@ class DumbbellRowAnalyzer(BaseLiftAnalyzer):
         strengths = []
         weaknesses = []
         
+        # High Priority: Stable Torso
+        torso_stability_score, torso_stability_metric, torso_stability_feedback = self.analyze_torso_stability_dumbbell_row(landmarks_list)
+        metrics.append(torso_stability_metric)
+        feedback.extend(torso_stability_feedback)
+        
         depth_score, depth_metric, depth_feedback = self.analyze_depth(landmarks_list, 0.4, "dumbbell_row")
         metrics.append(depth_metric)
         feedback.extend(depth_feedback)
@@ -44,7 +49,7 @@ class DumbbellRowAnalyzer(BaseLiftAnalyzer):
         feedback.extend(hip_feedback)
         
         overall_score = np.mean([
-            depth_score, path_score, spine_score, tempo_score, elbow_score, hip_score
+            torso_stability_score, depth_score, path_score, spine_score, tempo_score, elbow_score, hip_score
         ])
         
         for metric in metrics:

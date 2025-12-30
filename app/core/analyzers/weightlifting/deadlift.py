@@ -19,6 +19,11 @@ class DeadliftAnalyzer(BaseLiftAnalyzer):
         strengths = []
         weaknesses = []
         
+        # High Priority: Flat Back & Core Tight
+        spine_score, spine_metric, spine_feedback = self.analyze_spine_alignment_deadlift(landmarks_list)
+        metrics.append(spine_metric)
+        feedback.extend(spine_feedback)
+        
         depth_score, depth_metric, depth_feedback = self.analyze_depth(landmarks_list, 0.6, "deadlift")
         metrics.append(depth_metric)
         feedback.extend(depth_feedback)
@@ -26,10 +31,6 @@ class DeadliftAnalyzer(BaseLiftAnalyzer):
         path_score, path_metric, path_feedback = self.analyze_bar_path(landmarks_list, "deadlift")
         metrics.append(path_metric)
         feedback.extend(path_feedback)
-        
-        spine_score, spine_metric, spine_feedback = self.analyze_spine_alignment(landmarks_list, "deadlift")
-        metrics.append(spine_metric)
-        feedback.extend(spine_feedback)
         
         tempo_score, tempo_metric, tempo_feedback = self.analyze_tempo(pose_data, "deadlift")
         metrics.append(tempo_metric)
@@ -44,7 +45,7 @@ class DeadliftAnalyzer(BaseLiftAnalyzer):
         feedback.extend(knee_feedback)
         
         overall_score = np.mean([
-            depth_score, path_score, spine_score, tempo_score, hip_score, knee_score
+            spine_score, depth_score, path_score, tempo_score, hip_score, knee_score
         ])
         
         for metric in metrics:

@@ -19,9 +19,10 @@ class LatPulldownAnalyzer(BaseLiftAnalyzer):
         strengths = []
         weaknesses = []
         
-        depth_score, depth_metric, depth_feedback = self.analyze_depth(landmarks_list, 0.5, "lat_pulldown")
-        metrics.append(depth_metric)
-        feedback.extend(depth_feedback)
+        # High Priority: Full Range and Control
+        range_of_motion_score, range_of_motion_metric, range_of_motion_feedback = self.analyze_range_of_motion_pulldown(landmarks_list)
+        metrics.append(range_of_motion_metric)
+        feedback.extend(range_of_motion_feedback)
         
         path_score, path_metric, path_feedback = self.analyze_bar_path(landmarks_list, "lat_pulldown")
         metrics.append(path_metric)
@@ -39,12 +40,8 @@ class LatPulldownAnalyzer(BaseLiftAnalyzer):
         metrics.append(elbow_metric)
         feedback.extend(elbow_feedback)
         
-        shoulder_score, shoulder_metric, shoulder_feedback = self.analyze_joint_angles(angles_list, "left_hip", 30.0, 20.0, "lat_pulldown")
-        metrics.append(shoulder_metric)
-        feedback.extend(shoulder_feedback)
-        
         overall_score = np.mean([
-            depth_score, path_score, spine_score, tempo_score, elbow_score, shoulder_score
+            range_of_motion_score, path_score, spine_score, tempo_score, elbow_score
         ])
         
         for metric in metrics:

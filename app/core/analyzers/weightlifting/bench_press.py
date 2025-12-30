@@ -19,6 +19,11 @@ class BenchPressAnalyzer(BaseLiftAnalyzer):
         strengths = []
         weaknesses = []
         
+        # High Priority: Tight Back and Elbows In
+        back_tightness_score, back_tightness_metric, back_tightness_feedback = self.analyze_back_tightness_bench(landmarks_list)
+        metrics.append(back_tightness_metric)
+        feedback.extend(back_tightness_feedback)
+        
         depth_score, depth_metric, depth_feedback = self.analyze_depth(landmarks_list, 0.5, "bench_press")
         metrics.append(depth_metric)
         feedback.extend(depth_feedback)
@@ -39,12 +44,8 @@ class BenchPressAnalyzer(BaseLiftAnalyzer):
         metrics.append(elbow_metric)
         feedback.extend(elbow_feedback)
         
-        shoulder_score, shoulder_metric, shoulder_feedback = self.analyze_joint_angles(angles_list, "left_hip", 45.0, 20.0, "bench_press")
-        metrics.append(shoulder_metric)
-        feedback.extend(shoulder_feedback)
-        
         overall_score = np.mean([
-            depth_score, path_score, spine_score, tempo_score, elbow_score, shoulder_score
+            back_tightness_score, depth_score, path_score, spine_score, tempo_score, elbow_score
         ])
         
         for metric in metrics:

@@ -19,6 +19,11 @@ class RDLAnalyzer(BaseLiftAnalyzer):
         strengths = []
         weaknesses = []
         
+        # High Priority: Proper Hip Hinge
+        hip_hinge_score, hip_hinge_metric, hip_hinge_feedback = self.analyze_hip_hinge_rdl(landmarks_list, angles_list)
+        metrics.append(hip_hinge_metric)
+        feedback.extend(hip_hinge_feedback)
+        
         depth_score, depth_metric, depth_feedback = self.analyze_depth(landmarks_list, 0.65, "rdl")
         metrics.append(depth_metric)
         feedback.extend(depth_feedback)
@@ -39,12 +44,8 @@ class RDLAnalyzer(BaseLiftAnalyzer):
         metrics.append(hip_metric)
         feedback.extend(hip_feedback)
         
-        knee_score, knee_metric, knee_feedback = self.analyze_joint_angles(angles_list, "left_knee", 170.0, 15.0, "rdl")
-        metrics.append(knee_metric)
-        feedback.extend(knee_feedback)
-        
         overall_score = np.mean([
-            depth_score, path_score, spine_score, tempo_score, hip_score, knee_score
+            hip_hinge_score, depth_score, path_score, spine_score, tempo_score, hip_score
         ])
         
         for metric in metrics:
