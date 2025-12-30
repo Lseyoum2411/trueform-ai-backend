@@ -214,7 +214,7 @@ class BaseLiftAnalyzer(BaseAnalyzer, ABC):
                     "tempo",
                     "You are moving too fast or too slow.",
                     [
-                        "Go down slowly, counting to 2",
+                        "Go down slowly with control",
                         "Pause briefly at the bottom",
                         "Come back up slowly with control",
                         "Do not rush or bounce"
