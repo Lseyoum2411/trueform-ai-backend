@@ -315,7 +315,7 @@ class GolfAnalyzer(BaseAnalyzer):
                     "Keep your hands ahead of the ball at impact. Think of your hands passing over the spot where the ball lies a split second before the clubhead does",
                     "Hit down on the ball. A good iron shot feels like you're hitting the ball then taking a divot out in front of where the ball was. Trust the loft of the club to get the ball up; your job is to deliver the club with your hands forward and a descending blow"
                 ],
-                "Line drill: Draw a chalk line or put a piece of tape on the grass/mat representing where the ball would be. Without a ball, take swings trying to brush the ground in front of the line (on the target side of it). When you can consistently do that, hit balls placed just behind the line, and see that your divot starts at or just past the line. Do 3 sets of 5 swings focusing on this contact point.",
+                "Line drill: Draw a chalk line or put a piece of tape on the grass/mat representing where the ball would be. Without a ball, take swings trying to brush the ground in front of the line (on the target side of it). When you can consistently do that, hit balls placed just behind the line, and see that your divot starts at or just past the line. Complete several sets with multiple swings focusing on this contact point.",
                 "Hands forward"
             ))
         else:
@@ -329,7 +329,7 @@ class GolfAnalyzer(BaseAnalyzer):
                     "Keep your hands ahead of the ball at impact",
                     "Hit down on the ball — feel like you're hitting the ball then taking a divot in front"
                 ],
-                "Line drill: Put tape on the ground where the ball would be. Practice brushing the ground in front of the line. Do 3 sets of 5 swings focusing on contact point.",
+                "Line drill: Put tape on the ground where the ball would be. Practice brushing the ground in front of the line. Complete several sets with multiple swings focusing on contact point.",
                 "Hands forward"
             ))
         
@@ -427,7 +427,7 @@ class GolfAnalyzer(BaseAnalyzer):
                 "When chipping, you sometimes lean back and try to lift the ball into the air with your wrists. This often results in chunked shots (hitting the turf behind the ball) or skulled shots (hitting the ball too high on the face and sending it flying).",
                 "Effective chipping is about consistent contact and letting the club's loft do the work. Keeping your weight forward and wrists firm (no flipping) ensures the club strikes the ball then grass, giving you a controlled trajectory. If you fall back or flip your wrists, the low point of your swing moves and you lose touch, causing those mis-hits. By staying steady over the ball, you improve accuracy and distance control around the greens.",
                 [
-                    "Set up with about 70% of your weight on your lead foot (left foot for right-handers) and keep it there through the entire chip",
+                    "Set up with most of your weight on your lead foot (left foot for right-handers) and keep it there through the entire chip",
                     "Keep your wrists firm. As you swing the club back and through, think of your arms and shoulders forming a triangle and rocking like a pendulum",
                     "Make sure your hands lead the clubhead slightly at impact. Your hands should be just ahead of the ball when you contact it"
                 ],
@@ -441,7 +441,7 @@ class GolfAnalyzer(BaseAnalyzer):
                 "Your weight positioning can be improved for better chip shots.",
                 "Keeping weight forward ensures consistent contact and controlled trajectory.",
                 [
-                    "Set up with about 70% of your weight on your lead foot and keep it there",
+                    "Set up with most of your weight on your lead foot and keep it there",
                     "Keep your wrists firm — think of your arms and shoulders rocking like a pendulum",
                     "Make sure your hands lead the clubhead slightly at impact"
                 ],

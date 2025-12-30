@@ -128,7 +128,7 @@ class SoccerAnalyzer(BaseAnalyzer):
                     "Lock your ankle on your kicking foot (toes pointed downward) and strike the center of the ball with the laces (the top of your foot)",
                     "Follow through with your kicking leg. After contact, your foot should continue toward the target and you can take an extra step or two forward"
                 ],
-                "Laces shooting drill: Set up a ball and take 10 shots from the top of the penalty box or a comfortable distance. For each shot, say out loud \"chest over, lock ankle\" as you shoot (it sounds silly, but it reinforces technique). Emphasize leaning into the shot and hitting with shoelaces. Aim low. Do 3 sets of 10 shots, alternating feet if you can, to build good habits.",
+                "Laces shooting drill: Set up a ball and take multiple shots from the top of the penalty box or a comfortable distance. For each shot, say out loud \"chest over, lock ankle\" as you shoot (it sounds silly, but it reinforces technique). Emphasize leaning into the shot and hitting with shoelaces. Aim low. Complete several sets, alternating feet if you can, to build good habits.",
                 "Chest over ball"
             ))
         else:
@@ -142,7 +142,7 @@ class SoccerAnalyzer(BaseAnalyzer):
                     "Keep your chest and shoulders over the ball",
                     "Lock your ankle and strike with your laces, not your toe"
                 ],
-                "Laces shooting drill: Take 10 shots saying \"chest over, lock ankle\" as you shoot. Focus on leaning into the shot. Do 3 sets of 10 shots.",
+                "Laces shooting drill: Take multiple shots saying \"chest over, lock ankle\" as you shoot. Focus on leaning into the shot. Complete several sets.",
                 "Chest over ball"
             ))
         
@@ -237,7 +237,7 @@ class SoccerAnalyzer(BaseAnalyzer):
                     "Swing through the ball. Don't stab at it. After contacting the ball, let your kicking leg continue its motion naturally in the direction of your target",
                     "Keep your eyes on the ball at the moment of impact and your body balanced. Lean your body slightly over the ball and step through the pass with your plant foot following the direction of the ball"
                 ],
-                "Wall passing drill: Stand ~5 meters from a wall. Pass the ball against the wall with your right foot and trap the rebound with your left, then vice versa. Focus on each pass being firm (you should hear a nice pop from the wall) and accurate. Key points: locked ankle, and a smooth follow-through each time. Do 20 passes (10 each foot) for 3 rounds.",
+                "Wall passing drill: Stand a comfortable distance from a wall. Pass the ball against the wall with your right foot and trap the rebound with your left, then vice versa. Focus on each pass being firm (you should hear a nice pop from the wall) and accurate. Key points: locked ankle, and a smooth follow-through each time. Complete multiple passes with each foot for several rounds.",
                 "Lock and follow"
             ))
         else:
@@ -251,7 +251,7 @@ class SoccerAnalyzer(BaseAnalyzer):
                     "Use the inside of your foot for passing",
                     "Swing through the ball, don't stab at it"
                 ],
-                "Wall passing drill: Stand 5 meters from a wall. Pass and trap, alternating feet. Focus on locked ankle and smooth follow-through. Do 20 passes (10 each foot) for 3 rounds.",
+                "Wall passing drill: Stand a comfortable distance from a wall. Pass and trap, alternating feet. Focus on locked ankle and smooth follow-through. Complete multiple passes with each foot for several rounds.",
                 "Lock and follow"
             ))
         
@@ -462,11 +462,11 @@ class SoccerAnalyzer(BaseAnalyzer):
                 "When dribbling at speed, the ball sometimes gets too far away from you, and you favor using only your dominant foot. This makes it easier for defenders to dispossess you because they can predict your moves or poke the ball away during a heavy touch.",
                 "Close control keeps the ball within reach so you can react to defenders and change direction quickly. Using both feet and all parts of your feet (inside, outside, sole) makes you less predictable and more versatile on the ball. If you only use one foot or take big touches, opponents will have an easier time stealing the ball or forcing you into a mistake. Improving close control will make you a more confident and elusive dribbler.",
                 [
-                    "Take smaller touches. Instead of kicking the ball several yards ahead on each stride, tap it gently so it's only 1–2 feet in front of you",
+                    "Take smaller touches. Instead of kicking the ball far ahead on each stride, tap it gently so it stays close in front of you",
                     "Use both feet. Practice dribbling patterns where you alternate touches between your left and right foot. Also use different parts of your foot: the instep for pushing forward, the outside of the foot for lateral moves, and the sole to pull the ball back or stop quickly",
                     "Keep your knees bent and stay on your toes. This athletic position lets you change direction quickly. And keep your head up as much as you can"
                 ],
-                "Cone weave: Set up 6-8 cones or markers about a yard or two apart in a zigzag or straight line. Dribble through them, weaving around each cone. Focus on using many small touches (at least one touch per step). Do this drill with your right foot only, then left foot only, then alternating both feet. Repeat each variation 3 times. As you improve, try to go faster without losing control or hitting the cones.",
+                "Cone weave: Set up several cones or markers spaced apart in a zigzag or straight line. Dribble through them, weaving around each cone. Focus on using many small touches (at least one touch per step). Do this drill with your right foot only, then left foot only, then alternating both feet. Repeat each variation multiple times. As you improve, try to go faster without losing control or hitting the cones.",
                 "Small touches"
             ))
         else:
@@ -476,11 +476,11 @@ class SoccerAnalyzer(BaseAnalyzer):
                 "Your close control can be improved for better dribbling.",
                 "Close control keeps the ball within reach so you can react to defenders and change direction quickly.",
                 [
-                    "Take smaller touches — tap the ball gently so it's only 1-2 feet in front of you",
+                    "Take smaller touches — tap the ball gently so it stays close in front of you",
                     "Use both feet and different parts of your foot",
                     "Keep your knees bent and stay on your toes"
                 ],
-                "Cone weave: Set up 6-8 cones and dribble through them with many small touches. Do this with your right foot only, then left foot only, then alternating both feet. Repeat each variation 3 times.",
+                "Cone weave: Set up several cones and dribble through them with many small touches. Do this with your right foot only, then left foot only, then alternating both feet. Repeat each variation multiple times.",
                 "Small touches"
             ))
         
@@ -545,7 +545,7 @@ class SoccerAnalyzer(BaseAnalyzer):
                     "Decide your direction on the first touch. Rather than stopping the ball dead every time, often you want to direct it into space or away from a defender",
                     "Be on your toes and watch the ball in. Anticipate the ball's speed and trajectory as it comes to you. Move your feet early so you meet the ball in a good position"
                 ],
-                "Wall control drill: Stand a few yards from a wall. Pass the ball against the wall and practice controlling the rebound with one touch. Alternate between trapping it dead at your feet, or taking a prep touch to the side as if preparing to shoot or pass. Use both feet (and thighs/chest for higher bounces if you want). Do 3 sets of 10 receptions per foot. Focus on softening the impact and keeping the ball close.",
+                "Wall control drill: Stand a comfortable distance from a wall. Pass the ball against the wall and practice controlling the rebound with one touch. Alternate between trapping it dead at your feet, or taking a prep touch to the side as if preparing to shoot or pass. Use both feet (and thighs/chest for higher bounces if you want). Complete several sets with multiple receptions per foot. Focus on softening the impact and keeping the ball close.",
                 "Soft touch"
             ))
         else:
@@ -559,7 +559,7 @@ class SoccerAnalyzer(BaseAnalyzer):
                     "Decide your direction on the first touch",
                     "Be on your toes and watch the ball in — anticipate its speed and trajectory"
                 ],
-                "Wall control drill: Stand a few yards from a wall. Pass against the wall and practice controlling the rebound with one touch. Do 3 sets of 10 receptions per foot, focusing on softening the impact.",
+                "Wall control drill: Stand a comfortable distance from a wall. Pass against the wall and practice controlling the rebound with one touch. Complete several sets with multiple receptions per foot, focusing on softening the impact.",
                 "Soft touch"
             ))
         

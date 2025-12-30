@@ -143,7 +143,7 @@ class BasketballAnalyzer(BaseAnalyzer):
                     "Feel your weight evenly distributed on both feet before you shoot",
                     "Maintain this width throughout your entire shooting motion"
                 ],
-                "Stance-width form shooting from 5 feet. Check foot position before each shot. Make 25 shots focusing only on base width.",
+                "Stance-width form shooting from close range. Check foot position before each shot. Make multiple shots focusing only on base width.",
                 "Shoulder width base"
             ))
         
@@ -180,7 +180,7 @@ class BasketballAnalyzer(BaseAnalyzer):
                     "Keep your hips directly under your shoulders with no forward or backward lean",
                     "Drive straight up through your legs instead of leaning to create power"
                 ],
-                "Vertical alignment form shooting from 5 feet. Use a mirror to check your posture. Hold the start position for 2 seconds before each shot. Make 20 shots.",
+                "Vertical alignment form shooting from close range. Use a mirror to check your posture. Hold the start position briefly before each shot. Make multiple shots.",
                 "Stay stacked"
             ))
         
@@ -228,7 +228,7 @@ class BasketballAnalyzer(BaseAnalyzer):
                     "Eliminate any pause between knee bend and arm extension",
                     "Keep the ball moving continuously upward from start to release"
                 ],
-                "One-motion form shooting from 5-8 feet. Make 25 shots without stopping the ball at any point during your motion.",
+                "One-motion form shooting from close to mid-range. Make multiple shots without stopping the ball at any point during your motion.",
                 "One smooth motion"
             ))
         
@@ -266,7 +266,7 @@ class BasketballAnalyzer(BaseAnalyzer):
                     "Do not let the ball pause at your shooting pocket or set point",
                     "Keep everything moving in one continuous motion from start to finish"
                 ],
-                "Flow-through form shooting from 5 feet. Each shot must be one continuous motion. Make 30 shots focusing on eliminating all hitches.",
+                "Flow-through form shooting from close range. Each shot must be one continuous motion. Make multiple shots focusing on eliminating all hitches.",
                 "No stops, keep flowing"
             ))
         
@@ -314,7 +314,7 @@ class BasketballAnalyzer(BaseAnalyzer):
                     "Release the ball earlier in your jump instead of waiting until the peak",
                     "Feel your arm and legs work together to create speed"
                 ],
-                "Quick-release catch-and-shoot from mid-range. Catch and release immediately. 5 sets of 5 shots with focus on speed.",
+                "Quick-release catch-and-shoot from mid-range. Catch and release immediately. Complete several sets with focus on speed.",
                 "Up fast"
             ))
         
@@ -445,7 +445,7 @@ class BasketballAnalyzer(BaseAnalyzer):
                     "Feel your shoulders remain level and stacked over your toes",
                     "Briefly gather your body, then explode upward in rhythm — controlled deceleration before explosion"
                 ],
-                "One-dribble pull-up drill with jump stop. Focus on balanced landings before shooting. Make 25 shots emphasizing feet set before rise.",
+                "One-dribble pull-up drill with jump stop. Focus on balanced landings before shooting. Make multiple shots emphasizing feet set before rise.",
                 "Feet first"
             ))
         else:
@@ -564,7 +564,7 @@ class BasketballAnalyzer(BaseAnalyzer):
                     "Follow-through should be held until the ball reaches the basket",
                     "Synchronize leg drive and arm motion"
                 ],
-                "Routine-based free throw practice. Focus on identical routine and held finish. Make 25 free throws emphasizing consistency.",
+                "Routine-based free throw practice. Focus on identical routine and held finish. Make multiple free throws emphasizing consistency.",
                 "Hold the pose"
             ))
         
@@ -637,7 +637,7 @@ class BasketballAnalyzer(BaseAnalyzer):
                     "Keep your weight centered between both feet without shifting to one side",
                     "Maintain level hips from the start of your motion through release"
                 ],
-                "Level-hips form shooting from 5 feet. Check hip position in mirror before each shot. Make 20 shots focusing on keeping hips level.",
+                "Level-hips form shooting from close range. Check hip position in mirror before each shot. Make multiple shots focusing on keeping hips level.",
                 "Hips level"
             ))
         
@@ -689,7 +689,7 @@ class BasketballAnalyzer(BaseAnalyzer):
                     "Feel your elbow stay in line with your shoulder throughout your shot",
                     "Keep your shooting arm in a straight vertical line from shoulder to release point"
                 ],
-                "Elbow-alignment form shooting from 5 feet. Check elbow position before each shot. Make 30 shots focusing only on keeping elbow straight under ball.",
+                "Elbow-alignment form shooting from close range. Check elbow position before each shot. Make multiple shots focusing only on keeping elbow straight under ball.",
                 "Elbow straight"
             ))
         else:
@@ -703,7 +703,7 @@ class BasketballAnalyzer(BaseAnalyzer):
                     "Keep your shooting arm in a straight line from your shoulder through your release",
                     "Maintain elbow alignment throughout your entire shooting motion"
                 ],
-                "Straight-elbow form shooting from 5 feet. Check alignment in mirror. Make 25 shots with extra focus on elbow position.",
+                "Straight-elbow form shooting from close range. Check alignment in mirror. Make multiple shots with extra focus on elbow position.",
                 "Keep it straight"
             ))
         
@@ -742,7 +742,7 @@ class BasketballAnalyzer(BaseAnalyzer):
                     "Keep the ball above your waist and below your chin",
                     "Feel your forearm stay vertical before you start your upward motion"
                 ],
-                "Stationary pocket check shooting from 5 feet. Hold pocket position for 1 second, then shoot. Make 20 shots focusing on correct pocket height.",
+                "Stationary pocket check shooting from close range. Hold pocket position briefly, then shoot. Make multiple shots focusing on correct pocket height.",
                 "Pocket clean"
             ))
         
@@ -781,7 +781,7 @@ class BasketballAnalyzer(BaseAnalyzer):
                     "Finish with your fingers pointing toward the rim",
                     "Hold your follow-through high until the ball hits the rim"
                 ],
-                "High-release form shooting with exaggerated follow-through from 5 feet. Make 20 shots focusing on full arm extension at release.",
+                "High-release form shooting with exaggerated follow-through from close range. Make multiple shots focusing on full arm extension at release.",
                 "Reach and hold"
             ))
         
@@ -859,7 +859,7 @@ class BasketballAnalyzer(BaseAnalyzer):
                     "Hold your wrist snapped forward with fingers pointing down toward the floor",
                     "Do not drop your arm until after the ball hits the rim"
                 ],
-                "Hold-through form shooting from 8 feet. Hold follow-through for 2 full seconds after each shot. Make 25 shots.",
+                "Hold-through form shooting from close range. Hold follow-through for a full moment after each shot. Make multiple shots.",
                 "Hold it"
             ))
         
@@ -901,7 +901,7 @@ class BasketballAnalyzer(BaseAnalyzer):
                     "Let your fingers point down toward the floor at the end of your follow-through",
                     "Feel consistent backspin on the ball when it leaves your hand"
                 ],
-                "Wrist-snap form shooting from 5 feet. Focus on feeling the snap at release. Make 30 shots concentrating on wrist action.",
+                "Wrist-snap form shooting from close range. Focus on feeling the snap at release. Make multiple shots concentrating on wrist action.",
                 "Snap it"
             ))
         

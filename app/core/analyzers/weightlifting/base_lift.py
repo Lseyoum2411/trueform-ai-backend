@@ -462,7 +462,7 @@ class BaseLiftAnalyzer(BaseAnalyzer, ABC):
                 ],
                 "Your knees should feel like they are pushing outward, like you are trying to spread the floor apart with your feet.",
                 "Do not let your knees cave inward. Push them outward over your toes.",
-                "Box squat practice: Use a box or bench set at just about parallel height. Squat down until you just touch your butt to the box (don't sit fully, just a light tap) and come back up. The box gives you a depth target and confidence to sit back into your squat. Do 3 sets of 8 reps with a light weight, focusing on knees out and consistent depth each rep."
+                "Box squat practice: Use a box or bench set at just about parallel height. Squat down until you just touch your butt to the box (don't sit fully, just a light tap) and come back up. The box gives you a depth target and confidence to sit back into your squat. Complete several sets with multiple reps using a light weight, focusing on knees out and consistent depth each rep."
             ))
         else:
             feedback.append(self.create_beginner_feedback(

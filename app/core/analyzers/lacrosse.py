@@ -113,7 +113,7 @@ class LacrosseAnalyzer(BaseAnalyzer):
                     "Rotate your hips and shoulders. As you step, turn your hips toward the goal and follow with your shoulders",
                     "Follow through with your stick pointing toward where you aimed. A good indicator of proper rotation is that after the shot, your stick and body continue in the direction of the shot"
                 ],
-                "Step-down shooting drill: Stand about 10 yards from the goal. Start with your feet staggered (if you're a righty shooter, right foot back, left foot forward). Take a cradle and then step forward hard with your back foot, rotate your body, and shoot. Do this 10 times focusing on really feeling the push off the back foot and the torso turn. The ball should zip out faster. Then practice shooting on the run, using that same weight transfer on the plant foot and rotation.",
+                "Step-down shooting drill: Stand a comfortable distance from the goal. Start with your feet staggered (if you're a righty shooter, right foot back, left foot forward). Take a cradle and then step forward hard with your back foot, rotate your body, and shoot. Repeat this multiple times focusing on really feeling the push off the back foot and the torso turn. The ball should zip out faster. Then practice shooting on the run, using that same weight transfer on the plant foot and rotation.",
                 "Legs into shot"
             ))
         else:
@@ -127,7 +127,7 @@ class LacrosseAnalyzer(BaseAnalyzer):
                     "Start with weight on your back foot and push off it, shifting to front foot as you release",
                     "Rotate your hips and shoulders toward the goal"
                 ],
-                "Step-down shooting drill: Stand 10 yards from goal. Start with feet staggered, step forward hard with back foot, rotate your body, and shoot. Do 10 reps focusing on weight transfer.",
+                "Step-down shooting drill: Stand a comfortable distance from goal. Start with feet staggered, step forward hard with back foot, rotate your body, and shoot. Repeat multiple times focusing on weight transfer.",
                 "Legs into shot"
             ))
         

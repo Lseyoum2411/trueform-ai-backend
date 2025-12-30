@@ -116,11 +116,11 @@ class VolleyballAnalyzer(BaseAnalyzer):
                 "Timing your jump to contact the ball at the peak of your reach is critical for a powerful spike. If you're on the way down, you've lost height and hitting power. Additionally, a full arm swing (drawing your arm back and swinging through fast with a wrist snap) generates speed on the ball. Mistiming plus a half-hearted arm swing leads to easy, less forceful hits that opponents can dig or block. Improving these will make your spikes more explosive and effective.",
                 [
                     "Watch the set carefully and adjust your approach speed. If the ball is set high, you may need to wait a split second longer before you start your approach. If it's low or quick, you go faster",
-                    "Use a consistent 3-step or 4-step approach (commonly for right-handers: left, right-left). The last two steps should be quick and explosive — think \"big last step, then jump\"",
+                    "Use a consistent approach with multiple steps (commonly for right-handers: left, right-left). The last two steps should be quick and explosive — think \"big last step, then jump\"",
                     "As you plant those last two steps, swing your arms back, then swing them up explosively to help your lift",
                     "Draw your hitting arm back during your jump (elbow high and behind, like pulling a bow and arrow). Then swing through fast and snap your wrist on contact"
                 ],
-                "Self-toss spike practice: Toss a ball to yourself (or have a partner toss) and practice your approach and jump timing. Focus on jumping so that you contact the ball at your highest point. Do this 10 times: toss, approach, jump, spike. Each time, adjust if you were early or late. Additionally, practice with a partner setting: have them set the ball 10 times, and you concentrate on matching your jump to the set. Over time, you'll internalize the right timing.",
+                "Self-toss spike practice: Toss a ball to yourself (or have a partner toss) and practice your approach and jump timing. Focus on jumping so that you contact the ball at your highest point. Repeat this multiple times: toss, approach, jump, spike. Each time, adjust if you were early or late. Additionally, practice with a partner setting: have them set the ball multiple times, and you concentrate on matching your jump to the set. Over time, you'll internalize the right timing.",
                 "Jump on time, reach high"
             ))
         else:
@@ -131,10 +131,10 @@ class VolleyballAnalyzer(BaseAnalyzer):
                 "Timing your jump to contact the ball at the peak of your reach is critical for power.",
                 [
                     "Watch the set carefully and adjust your approach speed",
-                    "Use a consistent 3-step or 4-step approach with quick, explosive last two steps",
+                    "Use a consistent approach with quick, explosive last two steps",
                     "Swing your arms up explosively to help your lift"
                 ],
-                "Self-toss spike practice: Toss a ball to yourself and practice your approach and jump timing. Focus on contacting the ball at your highest point. Do 10 reps, adjusting if you were early or late.",
+                "Self-toss spike practice: Toss a ball to yourself and practice your approach and jump timing. Focus on contacting the ball at your highest point. Repeat multiple times, adjusting if you were early or late.",
                 "Jump on time, reach high"
             ))
         
@@ -241,7 +241,7 @@ class VolleyballAnalyzer(BaseAnalyzer):
                     "Use a consistent motion: Don't toss with a big throw; it's more of a controlled lift. Keep your tossing arm relatively straight and lift the ball up with your palm/fingers guiding it",
                     "Approach after the toss: As soon as the ball leaves your hand, take your approach (usually a 3-step: for right-handers, left-right-left). The goal is to jump and meet the ball at full arm extension"
                 ],
-                "Toss-and-catch drill: Stand at your serving position and toss the ball as if you're going to jump serve, but instead of hitting it, just jump and catch it at what would be your contact point. If you can catch it comfortably with your arm fully extended, your toss was good. If you have to reach forward or it's off to the side, adjust and try again. Do 15 tosses (and jumps) aiming for perfect placement. Once you have a feel for that, do a series of actual jump serves focusing on replicating that same toss every time.",
+                "Toss-and-catch drill: Stand at your serving position and toss the ball as if you're going to jump serve, but instead of hitting it, just jump and catch it at what would be your contact point. If you can catch it comfortably with your arm fully extended, your toss was good. If you have to reach forward or it's off to the side, adjust and try again. Repeat multiple tosses (and jumps) aiming for perfect placement. Once you have a feel for that, do a series of actual jump serves focusing on replicating that same toss every time.",
                 "High and forward"
             ))
         else:
@@ -255,7 +255,7 @@ class VolleyballAnalyzer(BaseAnalyzer):
                     "Use a controlled lift motion, not a big throw",
                     "Aim for the same spot every time — a few feet above your extended reach and a step or two in front"
                 ],
-                "Toss-and-catch drill: Toss the ball and jump to catch it at your contact point. If you can catch it comfortably with your arm fully extended, your toss was good. Do 15 tosses aiming for perfect placement.",
+                "Toss-and-catch drill: Toss the ball and jump to catch it at your contact point. If you can catch it comfortably with your arm fully extended, your toss was good. Repeat multiple tosses aiming for perfect placement.",
                 "High and forward"
             ))
         
@@ -314,7 +314,7 @@ class VolleyballAnalyzer(BaseAnalyzer):
                     "As you jump, reach your arms straight up and then over the net. Don't swat at the ball, just form a solid wall",
                     "Penetrating means your hands are on the opponent's side of the net (without touching the net) at peak jump. This cuts off the angle"
                 ],
-                "Shadow blocking: With no ball, have a partner stand as a \"hitter\" on the other side of the net. They should do a mock spike motion. Practice timing your jump with their arm swing — they swing, you jump to block. Focus on penetrating your arms over the net on each rep. Do 10 reps. Then move to live hitting: have a partner or coach hit balls while you attempt to block. Start with easier, high sets to get the timing, then progress to game-like sets. Each time, concentrate on the point of contact — your goal is to meet the ball squarely with firm hands over the net.",
+                "Shadow blocking: With no ball, have a partner stand as a \"hitter\" on the other side of the net. They should do a mock spike motion. Practice timing your jump with their arm swing — they swing, you jump to block. Focus on penetrating your arms over the net on each rep. Repeat multiple times. Then move to live hitting: have a partner or coach hit balls while you attempt to block. Start with easier, high sets to get the timing, then progress to game-like sets. Each time, concentrate on the point of contact — your goal is to meet the ball squarely with firm hands over the net.",
                 "Jump with hitter"
             ))
         else:
@@ -328,7 +328,7 @@ class VolleyballAnalyzer(BaseAnalyzer):
                     "Jump when they jump (for quick sets, go up slightly before)",
                     "Reach your arms straight up and then over the net"
                 ],
-                "Shadow blocking: Have a partner do a mock spike motion. Practice timing your jump with their arm swing. Focus on penetrating your arms over the net. Do 10 reps.",
+                "Shadow blocking: Have a partner do a mock spike motion. Practice timing your jump with their arm swing. Focus on penetrating your arms over the net. Repeat multiple times.",
                 "Jump with hitter"
             ))
         
