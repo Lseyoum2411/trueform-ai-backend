@@ -207,8 +207,6 @@ async def upload_video(
                         "properties": {
                             "source": "backend",
                             "platform": "web",
-                            "sport": sport,
-                            "exercise_type": exercise_type,
                         },
                     },
                 )
