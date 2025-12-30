@@ -215,13 +215,13 @@ class BaseLiftAnalyzer(BaseAnalyzer, ABC):
                     "You are moving too fast or too slow.",
                     [
                         "Go down slowly, counting to 2",
-                        "Pause for 1 second at the bottom",
-                        "Come back up slowly, counting to 2",
+                        "Pause briefly at the bottom",
+                        "Come back up slowly with control",
                         "Do not rush or bounce"
                     ],
                     "The movement should feel smooth and controlled, like slow motion.",
                     "Do not drop down fast or bounce at the bottom. Move slowly and smoothly.",
-                    "Count in your head: 2 seconds down, pause, 2 seconds up."
+                    "Move slowly and deliberately: down with control, pause briefly, then up with control."
                 ))
         
         return tempo_score, metric, feedback
