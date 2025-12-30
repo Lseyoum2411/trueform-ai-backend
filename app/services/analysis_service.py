@@ -48,16 +48,8 @@ WEIGHTLIFTING_METRIC_NORMALIZATION = {
 class AnalysisService:
     def __init__(self):
         # Lazy-load analyzers (don't instantiate ML models at import time)
-        self._basketball_analyzer = None
         self._weightlifting_analyzer = None
         self._ensure_results_directory()
-    
-    @property
-    def basketball_analyzer(self):
-        """Lazy-load basketball analyzer on first use."""
-        if self._basketball_analyzer is None:
-            self._basketball_analyzer = BasketballAnalyzer()
-        return self._basketball_analyzer
     
     @property
     def weightlifting_analyzer(self):
@@ -315,8 +307,10 @@ class AnalysisService:
             
             # Route to appropriate analyzer
             if sport == "basketball":
-                # Basketball doesn't use exercise_type in analyzer (uses single analyzer)
-                raw_result = await self.basketball_analyzer.analyze(pose_data)
+                # Basketball analyzer now accepts exercise_type
+                exercise_type_for_analyzer = normalized_exercise_type or None
+                basketball_analyzer = BasketballAnalyzer(exercise_type=exercise_type_for_analyzer)
+                raw_result = await basketball_analyzer.analyze(pose_data)
                 # Update exercise_type in result to normalized value
                 if normalized_exercise_type:
                     raw_result.exercise_type = normalized_exercise_type

@@ -7,8 +7,9 @@ import uuid
 
 
 class BasketballAnalyzer(BaseAnalyzer):
-    def __init__(self):
+    def __init__(self, exercise_type: str = None):
         super().__init__()
+        self.exercise_type = exercise_type.lower() if exercise_type else None
     
     async def analyze(self, pose_data: List[Dict]) -> AnalysisResult:
         if not pose_data:
@@ -22,19 +23,67 @@ class BasketballAnalyzer(BaseAnalyzer):
         landmarks_list = [frame.get("landmarks", {}) for frame in pose_data]
         angles_list = [frame.get("angles", {}) for frame in pose_data]
         
-        base_stability_score = self._analyze_base_stability(landmarks_list, metrics, feedback, strengths)
-        vertical_alignment_score = self._analyze_vertical_alignment(landmarks_list, metrics, feedback)
-        shot_rhythm_score = self._analyze_shot_rhythm(pose_data, metrics, feedback, strengths)
-        one_motion_flow_score = self._analyze_one_motion_flow(angles_list, metrics, feedback)
-        release_speed_score = self._analyze_release_speed(pose_data, metrics, feedback, strengths)
-        knee_bend_score = self._analyze_knee_bend(angles_list, metrics, feedback)
-        hip_alignment_score = self._analyze_hip_alignment(landmarks_list, metrics, feedback)
-        elbow_alignment_score = self._analyze_elbow_alignment(landmarks_list, angles_list, metrics, feedback, strengths)
-        shooting_pocket_score = self._analyze_shooting_pocket(landmarks_list, metrics, feedback)
-        release_point_score = self._analyze_release_point(landmarks_list, metrics, feedback)
-        shot_arc_score = self._analyze_shot_arc(landmarks_list, metrics, feedback)
-        follow_through_score = self._analyze_follow_through(angles_list, metrics, feedback)
-        wrist_snap_score = self._analyze_wrist_snap(angles_list, metrics, feedback)
+        # Exercise-specific analysis with different priorities
+        if self.exercise_type == "catch_and_shoot":
+            # Catch & Shoot: Focus on Release Speed (High Priority)
+            base_stability_score = self._analyze_base_stability(landmarks_list, metrics, feedback, strengths)
+            vertical_alignment_score = self._analyze_vertical_alignment(landmarks_list, metrics, feedback)
+            release_speed_score = self._analyze_release_speed_catch_and_shoot(pose_data, metrics, feedback, strengths)
+            shot_rhythm_score = self._analyze_shot_rhythm(pose_data, metrics, feedback, strengths)
+            one_motion_flow_score = self._analyze_one_motion_flow(angles_list, metrics, feedback)
+            knee_bend_score = self._analyze_knee_bend(angles_list, metrics, feedback)
+            hip_alignment_score = self._analyze_hip_alignment(landmarks_list, metrics, feedback)
+            elbow_alignment_score = self._analyze_elbow_alignment(landmarks_list, angles_list, metrics, feedback, strengths)
+            shooting_pocket_score = self._analyze_shooting_pocket(landmarks_list, metrics, feedback)
+            release_point_score = self._analyze_release_point(landmarks_list, metrics, feedback)
+            shot_arc_score = self._analyze_shot_arc(landmarks_list, metrics, feedback)
+            follow_through_score = self._analyze_follow_through(angles_list, metrics, feedback)
+            wrist_snap_score = self._analyze_wrist_snap(angles_list, metrics, feedback)
+        elif self.exercise_type == "shot_off_dribble":
+            # Shot Off Dribble: Focus on Balance & Footwork (High Priority)
+            base_stability_score = self._analyze_base_stability_shot_off_dribble(landmarks_list, metrics, feedback, strengths)
+            vertical_alignment_score = self._analyze_vertical_alignment_shot_off_dribble(landmarks_list, metrics, feedback)
+            shot_rhythm_score = self._analyze_shot_rhythm(pose_data, metrics, feedback, strengths)
+            one_motion_flow_score = self._analyze_one_motion_flow(angles_list, metrics, feedback)
+            release_speed_score = self._analyze_release_speed(pose_data, metrics, feedback, strengths)
+            knee_bend_score = self._analyze_knee_bend(angles_list, metrics, feedback)
+            hip_alignment_score = self._analyze_hip_alignment(landmarks_list, metrics, feedback)
+            elbow_alignment_score = self._analyze_elbow_alignment(landmarks_list, angles_list, metrics, feedback, strengths)
+            shooting_pocket_score = self._analyze_shooting_pocket(landmarks_list, metrics, feedback)
+            release_point_score = self._analyze_release_point(landmarks_list, metrics, feedback)
+            shot_arc_score = self._analyze_shot_arc(landmarks_list, metrics, feedback)
+            follow_through_score = self._analyze_follow_through(angles_list, metrics, feedback)
+            wrist_snap_score = self._analyze_wrist_snap(angles_list, metrics, feedback)
+        elif self.exercise_type == "free_throw":
+            # Free Throw: Focus on Follow-Through Consistency (High Priority)
+            base_stability_score = self._analyze_base_stability(landmarks_list, metrics, feedback, strengths)
+            vertical_alignment_score = self._analyze_vertical_alignment(landmarks_list, metrics, feedback)
+            shot_rhythm_score = self._analyze_shot_rhythm(pose_data, metrics, feedback, strengths)
+            one_motion_flow_score = self._analyze_one_motion_flow(angles_list, metrics, feedback)
+            release_speed_score = self._analyze_release_speed(pose_data, metrics, feedback, strengths)
+            knee_bend_score = self._analyze_knee_bend(angles_list, metrics, feedback)
+            hip_alignment_score = self._analyze_hip_alignment(landmarks_list, metrics, feedback)
+            elbow_alignment_score = self._analyze_elbow_alignment(landmarks_list, angles_list, metrics, feedback, strengths)
+            shooting_pocket_score = self._analyze_shooting_pocket(landmarks_list, metrics, feedback)
+            release_point_score = self._analyze_release_point(landmarks_list, metrics, feedback)
+            shot_arc_score = self._analyze_shot_arc(landmarks_list, metrics, feedback)
+            follow_through_score = self._analyze_follow_through_free_throw(angles_list, metrics, feedback)
+            wrist_snap_score = self._analyze_wrist_snap(angles_list, metrics, feedback)
+        else:
+            # Default: General basketball analysis
+            base_stability_score = self._analyze_base_stability(landmarks_list, metrics, feedback, strengths)
+            vertical_alignment_score = self._analyze_vertical_alignment(landmarks_list, metrics, feedback)
+            shot_rhythm_score = self._analyze_shot_rhythm(pose_data, metrics, feedback, strengths)
+            one_motion_flow_score = self._analyze_one_motion_flow(angles_list, metrics, feedback)
+            release_speed_score = self._analyze_release_speed(pose_data, metrics, feedback, strengths)
+            knee_bend_score = self._analyze_knee_bend(angles_list, metrics, feedback)
+            hip_alignment_score = self._analyze_hip_alignment(landmarks_list, metrics, feedback)
+            elbow_alignment_score = self._analyze_elbow_alignment(landmarks_list, angles_list, metrics, feedback, strengths)
+            shooting_pocket_score = self._analyze_shooting_pocket(landmarks_list, metrics, feedback)
+            release_point_score = self._analyze_release_point(landmarks_list, metrics, feedback)
+            shot_arc_score = self._analyze_shot_arc(landmarks_list, metrics, feedback)
+            follow_through_score = self._analyze_follow_through(angles_list, metrics, feedback)
+            wrist_snap_score = self._analyze_wrist_snap(angles_list, metrics, feedback)
         
         overall_score = np.mean([
             base_stability_score, vertical_alignment_score, shot_rhythm_score,
@@ -267,6 +316,256 @@ class BasketballAnalyzer(BaseAnalyzer):
                 ],
                 "Quick-release catch-and-shoot from mid-range. Catch and release immediately. 5 sets of 5 shots with focus on speed.",
                 "Up fast"
+            ))
+        
+        return score
+    
+    def _analyze_release_speed_catch_and_shoot(self, pose_data: List[Dict], metrics: List, feedback: List, strengths: List) -> float:
+        """Catch and Shoot specific analysis: Focus on catch-to-release timing and release speed."""
+        if len(pose_data) < 10:
+            return 50.0
+        
+        # Analyze catch-to-release timing (look for pause after catch)
+        wrist_positions = []
+        for frame in pose_data:
+            landmarks = frame.get("landmarks", {})
+            if "right_wrist" in landmarks:
+                wrist_positions.append(landmarks["right_wrist"][1])
+        
+        if not wrist_positions or len(wrist_positions) < 10:
+            return 50.0
+        
+        # Find when motion begins - wrist should start moving immediately
+        velocities = []
+        for i in range(1, len(wrist_positions)):
+            velocity = abs(wrist_positions[i] - wrist_positions[i-1]) / 0.033
+            velocities.append(velocity)
+        
+        if not velocities:
+            return 50.0
+        
+        # Check if there's a pause (low velocity) after initial motion starts
+        max_velocity_idx = np.argmax(velocities)
+        early_velocities = velocities[:max_velocity_idx] if max_velocity_idx > 3 else velocities[:len(velocities)//3]
+        
+        if early_velocities:
+            avg_early_velocity = np.mean(early_velocities)
+            hesitation_score = min(100, avg_early_velocity * 1000)  # Higher early velocity = less hesitation
+        else:
+            hesitation_score = 50.0
+        
+        # Analyze release speed
+        release_frames = pose_data[-5:]
+        wrist_velocities = []
+        
+        for i in range(1, len(release_frames)):
+            prev = release_frames[i-1].get("landmarks", {})
+            curr = release_frames[i].get("landmarks", {})
+            
+            if "right_wrist" in prev and "right_wrist" in curr:
+                velocity = np.sqrt(
+                    (curr["right_wrist"][0] - prev["right_wrist"][0])**2 +
+                    (curr["right_wrist"][1] - prev["right_wrist"][1])**2
+                ) / 0.033
+                wrist_velocities.append(velocity)
+        
+        if not wrist_velocities:
+            return 50.0
+        
+        avg_velocity = np.mean(wrist_velocities)
+        ideal_velocity = 0.45  # Slightly higher for catch and shoot
+        speed_score = max(0, 100 - abs(avg_velocity - ideal_velocity) * 200)
+        
+        # Combine hesitation and speed scores (weighted toward speed)
+        score = round((hesitation_score * 0.3 + speed_score * 0.7), 2)
+        metrics.append(self.create_metric("release_speed", score, value=round(avg_velocity, 2), unit="m/s"))
+        
+        if score >= 85:
+            feedback.append(self.create_feedback("info", "Fast catch-to-release timing — efficient in game situations.", "release_speed"))
+            strengths.append("Quick catch and shoot release")
+        elif score < 60:
+            feedback.append(self.create_actionable_feedback(
+                "critical",
+                "release_speed",
+                "Your catch-to-release timing is slow. You're waiting too long before initiating the shot, or releasing at the peak of your jump instead of on the way up.",
+                "Slower releases reduce defensive contest time but also decrease shooting percentage under pressure. Quicker shots that combine lower-body and upper-body motion create more efficient shooting.",
+                [
+                    "Begin extending your legs before your shooting arm reaches full extension",
+                    "Release the ball earlier in your jump instead of waiting until the peak",
+                    "Eliminate any pause after catching the ball — catch, load, jump, and release should feel like one continuous motion"
+                ],
+                "Quick-release catch-and-shoot from mid-range. Catch and release immediately without hesitation. 5 sets of 5 shots focusing on eliminating pause after catch.",
+                "Up fast"
+            ))
+        else:
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "release_speed",
+                "Your release speed can be improved for better game performance.",
+                "Faster releases reduce defensive contest time and increase shooting percentage under pressure.",
+                [
+                    "Lower body should begin extending BEFORE the shooting arm reaches full extension",
+                    "Shot should be released on the way up, not at the apex",
+                    "Catch, load, jump, and release should feel like one continuous motion"
+                ],
+                "Quick-release catch-and-shoot drill from mid-range. Focus on timing between leg extension and arm extension. 5 sets of 5 shots.",
+                "Up fast"
+            ))
+        
+        return score
+    
+    def _analyze_base_stability_shot_off_dribble(self, landmarks_list: List[Dict], metrics: List, feedback: List, strengths: List) -> float:
+        """Shot Off Dribble specific analysis: Focus on balance and footwork."""
+        if not landmarks_list:
+            return 50.0
+        
+        stability_scores = []
+        for landmarks in landmarks_list:
+            if "left_ankle" in landmarks and "right_ankle" in landmarks:
+                ankle_distance = abs(landmarks["left_ankle"][0] - landmarks["right_ankle"][0])
+                ideal_width = 0.15
+                deviation = abs(ankle_distance - ideal_width)
+                stability = max(0, 100 - (deviation * 500))
+                stability_scores.append(stability)
+        
+        score = np.mean(stability_scores) if stability_scores else 50.0
+        metrics.append(self.create_metric("base_stability", score, value=round(score, 1)))
+        
+        if score >= 85:
+            feedback.append(self.create_feedback("info", "Excellent base stability — solid foundation for shot off dribble.", "base_stability"))
+            strengths.append("Strong base stability")
+        elif score < 60:
+            feedback.append(self.create_actionable_feedback(
+                "critical",
+                "base_stability",
+                "Your feet are not properly set before rising. You're taking shots while leaning, drifting, or without a stable base after the dribble.",
+                "An unstable base leads to inconsistent shooting form and reduces accuracy and power. Proper footwork improves accuracy and allows the same mechanics at game speed.",
+                [
+                    "Plant your feet firmly before rising — use a jump stop or one-two step after the dribble",
+                    "Feel your shoulders remain level and stacked over your toes",
+                    "Briefly gather your body, then explode upward in rhythm — controlled deceleration before explosion"
+                ],
+                "One-dribble pull-up drill with jump stop. Focus on balanced landings before shooting. Make 25 shots emphasizing feet set before rise.",
+                "Feet first"
+            ))
+        else:
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "base_stability",
+                "Your base stability can be improved for better balance during shots off the dribble.",
+                "A stable base leads to repeatable shooting form and improves accuracy at game speed.",
+                [
+                    "Shooter should plant feet firmly before rising (jump stop or one-two step)",
+                    "Shoulders should remain level and stacked over toes",
+                    "Body should gather briefly, then explode upward in rhythm"
+                ],
+                "One-dribble pull-up drill with jump stop. Emphasis on balanced landings before shooting. Make 20 shots focusing on footwork.",
+                "Feet first"
+            ))
+        
+        return score
+    
+    def _analyze_vertical_alignment_shot_off_dribble(self, landmarks_list: List[Dict], metrics: List, feedback: List) -> float:
+        """Shot Off Dribble specific: Focus on balance and body control."""
+        if not landmarks_list:
+            return 50.0
+        
+        alignment_scores = []
+        for landmarks in landmarks_list:
+            if all(k in landmarks for k in ["nose", "left_hip", "right_hip", "left_ankle", "right_ankle"]):
+                hip_center_x = (landmarks["left_hip"][0] + landmarks["right_hip"][0]) / 2
+                ankle_center_x = (landmarks["left_ankle"][0] + landmarks["right_ankle"][0]) / 2
+                nose_x = landmarks["nose"][0]
+                
+                vertical_deviation = abs(nose_x - hip_center_x) + abs(hip_center_x - ankle_center_x)
+                alignment = max(0, 100 - (vertical_deviation * 300))
+                alignment_scores.append(alignment)
+        
+        score = np.mean(alignment_scores) if alignment_scores else 50.0
+        metrics.append(self.create_metric("vertical_alignment", score, value=round(score, 1)))
+        
+        if score >= 85:
+            feedback.append(self.create_feedback("info", "Perfect vertical alignment — body stacked correctly for balanced shot.", "vertical_alignment"))
+        elif score < 60:
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "vertical_alignment",
+                "Your body is leaning, drifting, or twisting during shots off the dribble instead of staying balanced.",
+                "Leaning reduces balance and makes it harder to generate consistent power. Body control and balance allow the same mechanics at game speed.",
+                [
+                    "Feel your head stacked directly over your shoulders throughout the shot",
+                    "Keep your hips directly under your shoulders with no forward, backward, or side lean",
+                    "Drive straight up through your legs instead of leaning to create power"
+                ],
+                "One-dribble pull-up with focus on body control. Check alignment in mirror before each shot. Make 20 shots emphasizing balance.",
+                "Stay stacked"
+            ))
+        
+        return score
+    
+    def _analyze_follow_through_free_throw(self, angles_list: List[Dict], metrics: List, feedback: List) -> float:
+        """Free Throw specific analysis: Focus on follow-through consistency."""
+        if not angles_list:
+            return 50.0
+        
+        # Analyze consistency across multiple frames
+        final_frames = angles_list[-5:] if len(angles_list) >= 5 else angles_list
+        follow_through_angles = []
+        
+        for angles in final_frames:
+            if "right_elbow" in angles:
+                follow_through_angles.append(angles["right_elbow"])
+        
+        if not follow_through_angles:
+            return 50.0
+        
+        avg_follow_through = np.mean(follow_through_angles)
+        ideal_follow_through = 160
+        
+        # Check consistency (variance) - for free throws, consistency matters more than absolute value
+        if len(follow_through_angles) > 1:
+            consistency_variance = np.var(follow_through_angles)
+            consistency_score = max(0, 100 - (consistency_variance * 100))  # Lower variance = higher consistency
+        else:
+            consistency_score = 50.0
+        
+        extension_score = max(0, 100 - abs(avg_follow_through - ideal_follow_through) * 1.5)
+        
+        # Weight consistency more heavily for free throws
+        score = round((extension_score * 0.4 + consistency_score * 0.6), 2)
+        metrics.append(self.create_metric("follow_through", score, value=round(avg_follow_through, 1), unit="degrees"))
+        
+        if score >= 85:
+            feedback.append(self.create_feedback("info", "Consistent follow-through extension — repeatable free throw form.", "follow_through"))
+        elif score < 60:
+            feedback.append(self.create_actionable_feedback(
+                "critical",
+                "follow_through",
+                "Your follow-through is inconsistent. You're pulling back your shooting arm early or not holding the finish consistently.",
+                "Inconsistent follow-through creates inconsistent arc and backspin. Variation in finish leads to inconsistent results under pressure. Consistent follow-through builds muscle memory.",
+                [
+                    "Shooting arm should fully extend on every attempt",
+                    "Wrist should snap downward with fingers pointing toward the rim",
+                    "Follow-through should be held until the ball reaches the basket",
+                    "Legs should supply power, not the upper body alone — synchronize leg drive and arm motion"
+                ],
+                "Repetitive routine-based free throw practice. Focus on identical routine and held finish. Make 30 free throws with emphasis on holding follow-through until ball reaches basket.",
+                "Hold the pose"
+            ))
+        else:
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "follow_through",
+                "Your follow-through consistency can be improved for better free throw accuracy.",
+                "Consistent follow-through creates repeatable arc and backspin, and holding the finish builds muscle memory.",
+                [
+                    "Shooting arm should fully extend on every attempt",
+                    "Wrist should snap downward with fingers pointing toward the rim",
+                    "Follow-through should be held until the ball reaches the basket",
+                    "Synchronize leg drive and arm motion"
+                ],
+                "Routine-based free throw practice. Focus on identical routine and held finish. Make 25 free throws emphasizing consistency.",
+                "Hold the pose"
             ))
         
         return score
