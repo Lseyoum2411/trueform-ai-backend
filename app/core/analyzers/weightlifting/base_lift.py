@@ -521,7 +521,7 @@ class BaseLiftAnalyzer(BaseAnalyzer, ABC):
                 ],
                 "Your legs should feel like they are working hard, like you are sitting down and standing up from a low chair.",
                 "Do not stop halfway down. Go all the way down until your thighs are parallel to the floor.",
-                "Box squat practice: Use a box or bench set at just about parallel height. Squat down until you just touch your butt to the box (don't sit fully, just a light tap) and come back up. Do 3 sets of 8 reps with a light weight, focusing on knees out and consistent depth each rep."
+                "Box squat practice: Use a box or bench set at just about parallel height. Squat down until you just touch your butt to the box (don't sit fully, just a light tap) and come back up. Complete several sets with multiple reps using a light weight, focusing on knees out and consistent depth each rep."
             ))
         else:
             feedback.append(self.create_beginner_feedback(
