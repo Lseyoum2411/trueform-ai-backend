@@ -341,11 +341,11 @@ class AnalysisService:
             if exercise_type:
                 normalized_exercise_type = normalize_movement_id(sport, exercise_type)
             
-            # Route to appropriate analyzer
+            # Route to appropriate analyzer (using lazy-load functions)
             if sport == "basketball":
                 # Basketball analyzer now accepts exercise_type
                 exercise_type_for_analyzer = normalized_exercise_type or None
-                basketball_analyzer = BasketballAnalyzer(exercise_type=exercise_type_for_analyzer)
+                basketball_analyzer = _get_basketball_analyzer(exercise_type=exercise_type_for_analyzer)
                 raw_result = await basketball_analyzer.analyze(pose_data)
                 # Update exercise_type in result to normalized value
                 if normalized_exercise_type:
@@ -362,35 +362,36 @@ class AnalysisService:
                     shot_type = "chip"
                 elif shot_type == "putting_stroke":
                     shot_type = "putt"
-                golf_analyzer = GolfAnalyzer(shot_type=shot_type)
+                golf_analyzer = _get_golf_analyzer(shot_type=shot_type)
                 raw_result = await golf_analyzer.analyze(pose_data)
             elif sport == "weightlifting":
                 lift_type = normalized_exercise_type or "barbell_squat"
                 # Map normalized ID to analyzer's expected format
                 from app.config import LIFT_TYPE_MAPPING
                 analyzer_lift_type = LIFT_TYPE_MAPPING.get(lift_type, lift_type)
-                raw_result = await self.weightlifting_analyzer.analyze(pose_data, lift_type=analyzer_lift_type)
+                weightlifting_analyzer = _get_weightlifting_analyzer()
+                raw_result = await weightlifting_analyzer.analyze(pose_data, lift_type=analyzer_lift_type)
                 # Store normalized exercise_type
                 raw_result.exercise_type = lift_type
             elif sport == "baseball":
                 exercise_type_for_analyzer = normalized_exercise_type or "pitching"
-                baseball_analyzer = BaseballAnalyzer(exercise_type=exercise_type_for_analyzer)
+                baseball_analyzer = _get_baseball_analyzer(exercise_type=exercise_type_for_analyzer)
                 raw_result = await baseball_analyzer.analyze(pose_data)
             elif sport == "soccer":
                 movement_type = normalized_exercise_type or "shooting_technique"
-                soccer_analyzer = SoccerAnalyzer(movement_type=movement_type)
+                soccer_analyzer = _get_soccer_analyzer(movement_type=movement_type)
                 raw_result = await soccer_analyzer.analyze(pose_data)
             elif sport == "track_field":
                 movement_type = normalized_exercise_type or "sprint_start"
-                track_analyzer = TrackFieldAnalyzer(movement_type=movement_type)
+                track_analyzer = _get_track_field_analyzer(movement_type=movement_type)
                 raw_result = await track_analyzer.analyze(pose_data)
             elif sport == "volleyball":
                 movement_type = normalized_exercise_type or "spike_approach"
-                volleyball_analyzer = VolleyballAnalyzer(movement_type=movement_type)
+                volleyball_analyzer = _get_volleyball_analyzer(movement_type=movement_type)
                 raw_result = await volleyball_analyzer.analyze(pose_data)
             elif sport == "lacrosse":
                 movement_type = normalized_exercise_type or "shooting"
-                lacrosse_analyzer = LacrosseAnalyzer(movement_type=movement_type)
+                lacrosse_analyzer = _get_lacrosse_analyzer(movement_type=movement_type)
                 raw_result = await lacrosse_analyzer.analyze(pose_data)
             else:
                 raise ValueError(f"Unsupported sport: {sport}")
