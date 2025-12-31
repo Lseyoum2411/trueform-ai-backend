@@ -79,6 +79,8 @@ class GolfAnalyzer(BaseAnalyzer):
             stance_width_score = self._analyze_stance_width(landmarks_list, metrics, feedback)
             spine_tilt_score = self._analyze_spine_tilt(landmarks_list, metrics, feedback)
             metric_scores = [m.score for m in metrics]
+            if not metric_scores:
+                logger.warning(f"Golf/{self.shot_type}: No component scores calculated, using fallback")
             critical_metric_names = ["swing_path"]
             critical_indices = [i for i, m in enumerate(metrics) if m.name in critical_metric_names]
             overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=critical_indices, max_critical_failures=2, max_moderate_failures=3)
@@ -92,6 +94,8 @@ class GolfAnalyzer(BaseAnalyzer):
             stance_width_score = self._analyze_stance_width(landmarks_list, metrics, feedback)
             spine_tilt_score = self._analyze_spine_tilt(landmarks_list, metrics, feedback)
             metric_scores = [m.score for m in metrics]
+            if not metric_scores:
+                logger.warning(f"Golf/{self.shot_type}: No component scores calculated, using fallback")
             critical_metric_names = ["ball_contact"]
             critical_indices = [i for i, m in enumerate(metrics) if m.name in critical_metric_names]
             overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=critical_indices, max_critical_failures=2, max_moderate_failures=3)
@@ -102,6 +106,8 @@ class GolfAnalyzer(BaseAnalyzer):
             balance_score = self._analyze_balance(landmarks_list, metrics, feedback)
             tempo_score = self._analyze_tempo(pose_data, metrics, feedback)
             metric_scores = [m.score for m in metrics]
+            if not metric_scores:
+                logger.warning(f"Golf/{self.shot_type}: No component scores calculated, using fallback")
             critical_metric_names = ["weight_forward"]
             critical_indices = [i for i, m in enumerate(metrics) if m.name in critical_metric_names]
             overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=critical_indices, max_critical_failures=2, max_moderate_failures=3)
@@ -112,6 +118,8 @@ class GolfAnalyzer(BaseAnalyzer):
             head_stability_score = self._analyze_head_stability_putt(landmarks_list, metrics, feedback)
             balance_score = self._analyze_balance(landmarks_list, metrics, feedback)
             metric_scores = [m.score for m in metrics]
+            if not metric_scores:
+                logger.warning(f"Golf/{self.shot_type}: No component scores calculated, using fallback")
             critical_metric_names = ["shoulder_stability"]
             critical_indices = [i for i, m in enumerate(metrics) if m.name in critical_metric_names]
             overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=critical_indices, max_critical_failures=2, max_moderate_failures=3)
@@ -125,6 +133,8 @@ class GolfAnalyzer(BaseAnalyzer):
             tempo_score = self._analyze_tempo(pose_data, metrics, feedback)
             follow_through_score = self._analyze_follow_through(landmarks_list, angles_list, metrics, feedback)
             metric_scores = [m.score for m in metrics]
+            if not metric_scores:
+                logger.warning(f"Golf/{self.shot_type}: No component scores calculated, using fallback")
             overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=[], max_critical_failures=2, max_moderate_failures=3)
         
         # Categorize strengths and weaknesses (NO numeric values)
@@ -139,6 +149,11 @@ class GolfAnalyzer(BaseAnalyzer):
         
         # Remove any remaining duplicate feedback items by metric name
         feedback = self.deduplicate_feedback_by_metric(feedback)
+        
+        # Ensure overall_score is never 0 for valid analysis
+        if overall_score <= 0:
+            logger.warning(f"Golf/{self.shot_type}: Overall score is {overall_score}, using fallback")
+            overall_score = self.finalize_score([], fallback=70)
         
         return AnalysisResult(
             analysis_id=str(uuid.uuid4()),

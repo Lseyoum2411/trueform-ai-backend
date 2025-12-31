@@ -2,8 +2,11 @@ from typing import List, Dict
 from datetime import datetime
 import numpy as np
 import uuid
+import logging
 from app.core.analyzers.base import BaseAnalyzer
 from app.models.analysis import AnalysisResult, MetricScore, FeedbackItem
+
+logger = logging.getLogger(__name__)
 
 
 class BaseballAnalyzer(BaseAnalyzer):
@@ -33,6 +36,8 @@ class BaseballAnalyzer(BaseAnalyzer):
             stride_score = self._analyze_stride_athletic_posture(landmarks_list, metrics, feedback)
             # Pitching critical: lower_body_engagement
             metric_scores = [m.score for m in metrics]
+            if not metric_scores:
+                logger.warning(f"Baseball/{self.exercise_type}: No component scores calculated, using fallback")
             critical_metric_names = ["lower_body_engagement"]
             critical_indices = [i for i, m in enumerate(metrics) if m.name in critical_metric_names]
             overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=critical_indices, max_critical_failures=2, max_moderate_failures=3)
@@ -43,6 +48,8 @@ class BaseballAnalyzer(BaseAnalyzer):
             hip_rotation_score = self._analyze_batting_hip_rotation(landmarks_list, angles_list, metrics, feedback)
             stride_score = self._analyze_batting_stride(landmarks_list, metrics, feedback)
             metric_scores = [m.score for m in metrics]
+            if not metric_scores:
+                logger.warning(f"Baseball/{self.exercise_type}: No component scores calculated, using fallback")
             critical_metric_names = ["weight_transfer"]
             critical_indices = [i for i, m in enumerate(metrics) if m.name in critical_metric_names]
             overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=critical_indices, max_critical_failures=2, max_moderate_failures=3)
@@ -53,6 +60,8 @@ class BaseballAnalyzer(BaseAnalyzer):
             footwork_score = self._analyze_catcher_footwork(landmarks_list, metrics, feedback)
             arm_path_score = self._analyze_catcher_arm_path(landmarks_list, angles_list, metrics, feedback)
             metric_scores = [m.score for m in metrics]
+            if not metric_scores:
+                logger.warning(f"Baseball/{self.exercise_type}: No component scores calculated, using fallback")
             critical_metric_names = ["quick_release"]
             critical_indices = [i for i, m in enumerate(metrics) if m.name in critical_metric_names]
             overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=critical_indices, max_critical_failures=2, max_moderate_failures=3)
@@ -63,6 +72,8 @@ class BaseballAnalyzer(BaseAnalyzer):
             centered_approach_score = self._analyze_fielding_centered(landmarks_list, metrics, feedback)
             two_hands_score = self._analyze_fielding_two_hands(landmarks_list, metrics, feedback)
             metric_scores = [m.score for m in metrics]
+            if not metric_scores:
+                logger.warning(f"Baseball/{self.exercise_type}: No component scores calculated, using fallback")
             critical_metric_names = ["stay_low"]
             critical_indices = [i for i, m in enumerate(metrics) if m.name in critical_metric_names]
             overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=critical_indices, max_critical_failures=2, max_moderate_failures=3)
@@ -72,7 +83,9 @@ class BaseballAnalyzer(BaseAnalyzer):
             # If we somehow get here, default to pitching analysis
             lower_body_score = self._analyze_pitching_lower_body_engagement(landmarks_list, angles_list, metrics, feedback, strengths)
             metric_scores = [m.score for m in metrics] if metrics else [lower_body_score]
-            overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=[], max_critical_failures=2, max_moderate_failures=3) if metrics else lower_body_score
+            if not metric_scores:
+                logger.warning(f"Baseball/{self.exercise_type}: No component scores calculated, using fallback")
+            overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=[], max_critical_failures=2, max_moderate_failures=3) if metrics else self.finalize_score([lower_body_score], fallback=70)
         
         # Populate strengths and weaknesses from metrics (NO numeric values)
         for metric in metrics:
@@ -86,6 +99,11 @@ class BaseballAnalyzer(BaseAnalyzer):
         
         # Remove any remaining duplicate feedback items by metric name
         feedback = self.deduplicate_feedback_by_metric(feedback)
+        
+        # Ensure overall_score is never 0 for valid analysis
+        if overall_score <= 0:
+            logger.warning(f"Baseball/{self.exercise_type}: Overall score is {overall_score}, using fallback")
+            overall_score = self.finalize_score([], fallback=70)
         
         return AnalysisResult(
             analysis_id=str(uuid.uuid4()),

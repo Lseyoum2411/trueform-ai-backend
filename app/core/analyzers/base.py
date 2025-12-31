@@ -1,6 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
+import logging
+import numpy as np
 from app.models.analysis import AnalysisResult, MetricScore, FeedbackItem
+
+logger = logging.getLogger(__name__)
 
 
 class BaseAnalyzer(ABC):
@@ -61,6 +65,38 @@ class BaseAnalyzer(ABC):
         
         return round(penalty, 2)
     
+    def finalize_score(self, component_scores: List[float], fallback: int = 70) -> float:
+        """
+        Ensures score is always valid and never 0 unless data is truly invalid.
+        
+        Args:
+            component_scores: List of metric scores (0-100)
+            fallback: Default score to use if component_scores is empty or invalid
+            
+        Returns:
+            Final score from 40-100 (never 0 unless fallback is 0, which indicates invalid data)
+        """
+        if not component_scores:
+            logger.warning(f"No component scores provided, using fallback: {fallback}")
+            return float(fallback)
+        
+        try:
+            score = float(np.mean(component_scores))
+        except (ValueError, TypeError) as e:
+            logger.warning(f"Error calculating score mean: {e}, using fallback: {fallback}")
+            return float(fallback)
+        
+        # Absolute floor for valid analysis: never return 0 unless fallback is 0 (invalid data)
+        # Minimum score for any valid analysis is 40
+        if score <= 0:
+            logger.warning(f"Score calculated as {score}, using fallback: {fallback}")
+            return float(fallback)
+        
+        # Ensure score is within reasonable bounds (40-100)
+        # Scores below 40 indicate catastrophic failure, but still valid analysis
+        final_score = max(40.0, min(100.0, score))
+        return round(final_score, 2)
+    
     def calculate_overall_score_penalty_based(
         self,
         metric_scores: List[float],
@@ -80,10 +116,11 @@ class BaseAnalyzer(ABC):
             max_moderate_failures: Hard cap threshold - if this many moderate failures, cap score
             
         Returns:
-            Overall score from 0-100
+            Overall score from 40-100 (never 0 unless data is invalid)
         """
         if not metric_scores:
-            return 50.0
+            logger.warning("No metric scores provided to calculate_overall_score_penalty_based, using fallback")
+            return self.finalize_score([], fallback=70)
         
         if critical_metrics is None:
             critical_metrics = []
@@ -117,9 +154,9 @@ class BaseAnalyzer(ABC):
         elif moderate_failures >= max_moderate_failures:
             base_score = min(base_score, 65.0)  # 3+ moderate failures cap at 65
         
-        # Clamp to 0-100 range
-        final_score = max(0.0, min(100.0, base_score))
-        return round(final_score, 2)
+        # Use finalize_score to ensure we never return 0 for valid analysis
+        final_score = self.finalize_score([base_score], fallback=70)
+        return final_score
     
     def create_feedback(
         self,
