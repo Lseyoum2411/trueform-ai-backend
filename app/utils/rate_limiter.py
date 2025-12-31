@@ -60,10 +60,3 @@ def finish_analysis(video_id: str) -> None:
 def get_active_count() -> int:
     """Get number of currently active analyses."""
     return len(_active_analyses)
-
-
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 3cec07eb73eb7a9d41527c45e27aa974b9b882ec

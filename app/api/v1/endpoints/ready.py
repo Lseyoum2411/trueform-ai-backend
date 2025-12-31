@@ -59,10 +59,3 @@ async def readiness_check():
             status_code=503,
             detail=f"Service not ready. Checks: {checks}"
         )
-
-
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 3cec07eb73eb7a9d41527c45e27aa974b9b882ec
