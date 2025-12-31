@@ -299,4 +299,33 @@ class BaseAnalyzer(ABC):
             return [primary_item] + other_items
         
         return feedback_list
+    
+    def deduplicate_feedback_by_metric(self, feedback_list: List[FeedbackItem]) -> List[FeedbackItem]:
+        """
+        Remove duplicate feedback items that have the same metric name.
+        Ensures only ONE feedback item per metric is returned.
+        
+        Args:
+            feedback_list: List of FeedbackItem objects
+            
+        Returns:
+            Filtered list with at most one feedback item per metric
+        """
+        seen_metrics = set()
+        unique_feedback = []
+        
+        for item in feedback_list:
+            metric = getattr(item, 'metric', None)
+            
+            # Skip items without a metric (keep them as they might be general feedback)
+            if not metric:
+                unique_feedback.append(item)
+                continue
+            
+            # Only keep the first feedback item for each metric
+            if metric not in seen_metrics:
+                seen_metrics.add(metric)
+                unique_feedback.append(item)
+        
+        return unique_feedback
 

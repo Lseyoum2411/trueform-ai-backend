@@ -104,6 +104,9 @@ class BasketballAnalyzer(BaseAnalyzer):
             elif metric.score < 60:
                 weaknesses.append(self.get_qualitative_weakness_description(metric.name))
         
+        # Remove any duplicate feedback items by metric name
+        feedback = self.deduplicate_feedback_by_metric(feedback)
+        
         return AnalysisResult(
             analysis_id=str(uuid.uuid4()),
             video_id="",

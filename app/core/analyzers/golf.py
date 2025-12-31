@@ -137,6 +137,9 @@ class GolfAnalyzer(BaseAnalyzer):
         # Consolidate duplicate weight transfer feedback (remove duplicate weight transfer items)
         feedback = self.consolidate_weight_transfer_feedback(feedback)
         
+        # Remove any remaining duplicate feedback items by metric name
+        feedback = self.deduplicate_feedback_by_metric(feedback)
+        
         return AnalysisResult(
             analysis_id=str(uuid.uuid4()),
             video_id="",
