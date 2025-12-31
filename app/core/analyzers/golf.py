@@ -78,10 +78,10 @@ class GolfAnalyzer(BaseAnalyzer):
             follow_through_score = self._analyze_follow_through(landmarks_list, angles_list, metrics, feedback)
             stance_width_score = self._analyze_stance_width(landmarks_list, metrics, feedback)
             spine_tilt_score = self._analyze_spine_tilt(landmarks_list, metrics, feedback)
-            overall_score = np.mean([
-                swing_path_score, weight_transfer_score, balance_score,
-                tempo_score, follow_through_score, stance_width_score, spine_tilt_score,
-            ])
+            metric_scores = [m.score for m in metrics]
+            critical_metric_names = ["swing_path"]
+            critical_indices = [i for i, m in enumerate(metrics) if m.name in critical_metric_names]
+            overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=critical_indices, max_critical_failures=2, max_moderate_failures=3)
         elif self.shot_type == "iron":
             # Iron: Focus on Ball-First Contact (High Priority)
             ball_contact_score = self._analyze_ball_contact_iron(landmarks_list, angles_list, metrics, feedback)
@@ -91,28 +91,30 @@ class GolfAnalyzer(BaseAnalyzer):
             follow_through_score = self._analyze_follow_through(landmarks_list, angles_list, metrics, feedback)
             stance_width_score = self._analyze_stance_width(landmarks_list, metrics, feedback)
             spine_tilt_score = self._analyze_spine_tilt(landmarks_list, metrics, feedback)
-            overall_score = np.mean([
-                ball_contact_score, weight_transfer_score, balance_score,
-                tempo_score, follow_through_score, stance_width_score, spine_tilt_score,
-            ])
+            metric_scores = [m.score for m in metrics]
+            critical_metric_names = ["ball_contact"]
+            critical_indices = [i for i, m in enumerate(metrics) if m.name in critical_metric_names]
+            overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=critical_indices, max_critical_failures=2, max_moderate_failures=3)
         elif self.shot_type == "chip":
             # Chip: Focus on Weight Forward, No Flip (High Priority)
             weight_forward_score = self._analyze_weight_forward_chip(landmarks_list, metrics, feedback)
             wrist_stability_score = self._analyze_wrist_stability_chip(angles_list, metrics, feedback)
             balance_score = self._analyze_balance(landmarks_list, metrics, feedback)
             tempo_score = self._analyze_tempo(pose_data, metrics, feedback)
-            overall_score = np.mean([
-                weight_forward_score, wrist_stability_score, balance_score, tempo_score,
-            ])
+            metric_scores = [m.score for m in metrics]
+            critical_metric_names = ["weight_forward"]
+            critical_indices = [i for i, m in enumerate(metrics) if m.name in critical_metric_names]
+            overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=critical_indices, max_critical_failures=2, max_moderate_failures=3)
         elif self.shot_type == "putt":
             # Putt: Focus on Steady Shoulders (High Priority)
             shoulder_stability_score = self._analyze_shoulder_stability_putt(landmarks_list, angles_list, metrics, feedback)
             wrist_stability_score = self._analyze_wrist_stability_putt(angles_list, metrics, feedback)
             head_stability_score = self._analyze_head_stability_putt(landmarks_list, metrics, feedback)
             balance_score = self._analyze_balance(landmarks_list, metrics, feedback)
-            overall_score = np.mean([
-                shoulder_stability_score, wrist_stability_score, head_stability_score, balance_score,
-            ])
+            metric_scores = [m.score for m in metrics]
+            critical_metric_names = ["shoulder_stability"]
+            critical_indices = [i for i, m in enumerate(metrics) if m.name in critical_metric_names]
+            overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=critical_indices, max_critical_failures=2, max_moderate_failures=3)
         else:
             # Default: General golf analysis
             stance_width_score = self._analyze_stance_width(landmarks_list, metrics, feedback)
@@ -122,17 +124,15 @@ class GolfAnalyzer(BaseAnalyzer):
             balance_score = self._analyze_balance(landmarks_list, metrics, feedback)
             tempo_score = self._analyze_tempo(pose_data, metrics, feedback)
             follow_through_score = self._analyze_follow_through(landmarks_list, angles_list, metrics, feedback)
-            overall_score = np.mean([
-                stance_width_score, spine_tilt_score, backswing_rotation_score,
-                weight_transfer_score, balance_score, tempo_score, follow_through_score,
-            ])
+            metric_scores = [m.score for m in metrics]
+            overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=[], max_critical_failures=2, max_moderate_failures=3)
         
-        # Categorize strengths and weaknesses
+        # Categorize strengths and weaknesses (NO numeric values)
         for metric in metrics:
             if metric.score >= 80:
-                strengths.append(f"{metric.name}: {metric.score:.1f}/100")
+                strengths.append(self.get_qualitative_strength_description(metric.name))
             elif metric.score < 60:
-                weaknesses.append(f"{metric.name}: {metric.score:.1f}/100")
+                weaknesses.append(self.get_qualitative_weakness_description(metric.name))
         
         return AnalysisResult(
             analysis_id=str(uuid.uuid4()),

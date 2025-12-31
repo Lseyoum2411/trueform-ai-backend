@@ -85,19 +85,24 @@ class BasketballAnalyzer(BaseAnalyzer):
             follow_through_score = self._analyze_follow_through(angles_list, metrics, feedback)
             wrist_snap_score = self._analyze_wrist_snap(angles_list, metrics, feedback)
         
-        overall_score = np.mean([
-            base_stability_score, vertical_alignment_score, shot_rhythm_score,
-            one_motion_flow_score, release_speed_score, knee_bend_score,
-            hip_alignment_score, elbow_alignment_score, shooting_pocket_score,
-            release_point_score, shot_arc_score, follow_through_score,
-            wrist_snap_score,
-        ])
+        # Use penalty-based professional benchmark scoring
+        # Critical metrics: base_stability, vertical_alignment, shot_rhythm, release_speed, elbow_alignment
+        metric_scores = [m.score for m in metrics]
+        critical_metric_names = ["base_stability", "vertical_alignment", "shot_rhythm", "release_speed", "elbow_alignment"]
+        critical_indices = [i for i, m in enumerate(metrics) if m.name in critical_metric_names]
+        overall_score = self.calculate_overall_score_penalty_based(
+            metric_scores,
+            critical_metrics=critical_indices,
+            max_critical_failures=2,
+            max_moderate_failures=3
+        )
         
+        # Add qualitative strengths/weaknesses (NO numeric values)
         for metric in metrics:
             if metric.score >= 80:
-                strengths.append(f"{metric.name}: {metric.score:.1f}/100")
+                strengths.append(self.get_qualitative_strength_description(metric.name))
             elif metric.score < 60:
-                weaknesses.append(f"{metric.name}: {metric.score:.1f}/100")
+                weaknesses.append(self.get_qualitative_weakness_description(metric.name))
         
         return AnalysisResult(
             analysis_id=str(uuid.uuid4()),

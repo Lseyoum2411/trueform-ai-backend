@@ -23,10 +23,14 @@ class TrackFieldAnalyzer(BaseAnalyzer):
         weaknesses = []
 
         # Placeholder analysis - will be implemented based on movement type
-        overall_score = 75.0
-
-        basic_metric = self.create_metric("form_analysis", overall_score)
-        metrics.append(basic_metric)
+        # Use penalty-based scoring for consistency
+        if metrics:
+            metric_scores = [m.score for m in metrics]
+            overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=[], max_critical_failures=2, max_moderate_failures=3)
+        else:
+            overall_score = 75.0
+            basic_metric = self.create_metric("form_analysis", overall_score)
+            metrics.append(basic_metric)
 
         feedback.append(self.create_feedback(
             "info",

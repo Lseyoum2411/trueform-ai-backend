@@ -31,41 +31,55 @@ class BaseballAnalyzer(BaseAnalyzer):
             lower_body_score = self._analyze_pitching_lower_body_engagement(landmarks_list, angles_list, metrics, feedback, strengths)
             hip_rotation_score = self._analyze_hip_rotation(landmarks_list, angles_list, metrics, feedback)
             stride_score = self._analyze_stride_athletic_posture(landmarks_list, metrics, feedback)
-            overall_score = np.mean([lower_body_score, hip_rotation_score, stride_score])
+            # Pitching critical: lower_body_engagement
+            metric_scores = [m.score for m in metrics]
+            critical_metric_names = ["lower_body_engagement"]
+            critical_indices = [i for i, m in enumerate(metrics) if m.name in critical_metric_names]
+            overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=critical_indices, max_critical_failures=2, max_moderate_failures=3)
             
         elif self.exercise_type == "batting":
             # Batting: Focus on Weight Transfer (High Priority)
             weight_transfer_score = self._analyze_batting_weight_transfer(landmarks_list, angles_list, metrics, feedback, strengths)
             hip_rotation_score = self._analyze_batting_hip_rotation(landmarks_list, angles_list, metrics, feedback)
             stride_score = self._analyze_batting_stride(landmarks_list, metrics, feedback)
-            overall_score = np.mean([weight_transfer_score, hip_rotation_score, stride_score])
+            metric_scores = [m.score for m in metrics]
+            critical_metric_names = ["weight_transfer"]
+            critical_indices = [i for i, m in enumerate(metrics) if m.name in critical_metric_names]
+            overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=critical_indices, max_critical_failures=2, max_moderate_failures=3)
             
         elif self.exercise_type == "catcher":
             # Catcher: Focus on Quick Throwing Release (High Priority)
             quick_release_score = self._analyze_catcher_quick_release(pose_data, landmarks_list, metrics, feedback, strengths)
             footwork_score = self._analyze_catcher_footwork(landmarks_list, metrics, feedback)
             arm_path_score = self._analyze_catcher_arm_path(landmarks_list, angles_list, metrics, feedback)
-            overall_score = np.mean([quick_release_score, footwork_score, arm_path_score])
+            metric_scores = [m.score for m in metrics]
+            critical_metric_names = ["quick_release"]
+            critical_indices = [i for i, m in enumerate(metrics) if m.name in critical_metric_names]
+            overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=critical_indices, max_critical_failures=2, max_moderate_failures=3)
             
         elif self.exercise_type == "fielding":
             # Fielding: Focus on Stay Low and Centered (High Priority)
             stay_low_score = self._analyze_fielding_stay_low(landmarks_list, angles_list, metrics, feedback, strengths)
             centered_approach_score = self._analyze_fielding_centered(landmarks_list, metrics, feedback)
             two_hands_score = self._analyze_fielding_two_hands(landmarks_list, metrics, feedback)
-            overall_score = np.mean([stay_low_score, centered_approach_score, two_hands_score])
+            metric_scores = [m.score for m in metrics]
+            critical_metric_names = ["stay_low"]
+            critical_indices = [i for i, m in enumerate(metrics) if m.name in critical_metric_names]
+            overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=critical_indices, max_critical_failures=2, max_moderate_failures=3)
             
         else:
             # Default fallback (should not occur due to validation in __init__)
             # If we somehow get here, default to pitching analysis
             lower_body_score = self._analyze_pitching_lower_body_engagement(landmarks_list, angles_list, metrics, feedback, strengths)
-            overall_score = lower_body_score
+            metric_scores = [m.score for m in metrics] if metrics else [lower_body_score]
+            overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=[], max_critical_failures=2, max_moderate_failures=3) if metrics else lower_body_score
         
-        # Populate strengths and weaknesses from metrics
+        # Populate strengths and weaknesses from metrics (NO numeric values)
         for metric in metrics:
             if metric.score >= 80:
-                strengths.append(f"{metric.name}: {metric.score:.1f}/100")
+                strengths.append(self.get_qualitative_strength_description(metric.name))
             elif metric.score < 60:
-                weaknesses.append(f"{metric.name}: {metric.score:.1f}/100")
+                weaknesses.append(self.get_qualitative_weakness_description(metric.name))
         
         return AnalysisResult(
             analysis_id=str(uuid.uuid4()),

@@ -36,15 +36,18 @@ class RearDeltFliesAnalyzer(BaseLiftAnalyzer):
         metrics.append(elbow_metric)
         feedback.extend(elbow_feedback)
         
-        overall_score = np.mean([
-            spine_score, tempo_score, shoulder_score, elbow_score
-        ])
+        # Use penalty-based professional benchmark scoring
+        # Critical metrics: spine_alignment
+        metric_scores = [m.score for m in metrics]
+        critical_metric_names = ["spine_alignment"]
+        critical_indices = [i for i, m in enumerate(metrics) if m.name in critical_metric_names]
+        overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=critical_indices, max_critical_failures=2, max_moderate_failures=3)
         
         for metric in metrics:
             if metric.score >= 80:
-                strengths.append(f"{metric.name}: {metric.score:.1f}/100")
+                strengths.append(self.get_qualitative_strength_description(metric.name))
             elif metric.score < 60:
-                weaknesses.append(f"{metric.name}: {metric.score:.1f}/100")
+                weaknesses.append(self.get_qualitative_weakness_description(metric.name))
         
         return AnalysisResult(
             analysis_id=str(uuid.uuid4()),

@@ -31,28 +31,38 @@ class VolleyballAnalyzer(BaseAnalyzer):
             jump_timing_score = self._analyze_jump_timing_spike(landmarks_list, metrics, feedback)
             arm_swing_score = self._analyze_arm_swing_spike(landmarks_list, angles_list, metrics, feedback)
             balance_score = self._analyze_balance(landmarks_list, metrics, feedback)
-            overall_score = np.mean([jump_timing_score, arm_swing_score, balance_score])
+            metric_scores = [m.score for m in metrics]
+            critical_metric_names = ["jump_timing", "arm_swing"]
+            critical_indices = [i for i, m in enumerate(metrics) if m.name in critical_metric_names]
+            overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=critical_indices, max_critical_failures=2, max_moderate_failures=3)
         elif self.movement_type == "jump_serve":
             # Jump Serve: Focus on Consistent Toss (High Priority)
             toss_consistency_score = self._analyze_toss_consistency_serve(landmarks_list, metrics, feedback)
             balance_score = self._analyze_balance(landmarks_list, metrics, feedback)
-            overall_score = np.mean([toss_consistency_score, balance_score])
+            metric_scores = [m.score for m in metrics]
+            critical_metric_names = ["toss_consistency"]
+            critical_indices = [i for i, m in enumerate(metrics) if m.name in critical_metric_names]
+            overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=critical_indices, max_critical_failures=2, max_moderate_failures=3)
         elif self.movement_type == "blocking_jump":
             # Blocking Jump: Focus on Timing and Penetration (High Priority)
             block_timing_score = self._analyze_block_timing(landmarks_list, metrics, feedback)
             penetration_score = self._analyze_penetration_block(landmarks_list, metrics, feedback)
             balance_score = self._analyze_balance(landmarks_list, metrics, feedback)
-            overall_score = np.mean([block_timing_score, penetration_score, balance_score])
+            metric_scores = [m.score for m in metrics]
+            critical_metric_names = ["block_timing", "penetration"]
+            critical_indices = [i for i, m in enumerate(metrics) if m.name in critical_metric_names]
+            overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=critical_indices, max_critical_failures=2, max_moderate_failures=3)
         else:
             # Default: General volleyball analysis
             balance_score = self._analyze_balance(landmarks_list, metrics, feedback)
-            overall_score = balance_score
+            metric_scores = [m.score for m in metrics] if metrics else [balance_score]
+            overall_score = self.calculate_overall_score_penalty_based(metric_scores, critical_metrics=[], max_critical_failures=2, max_moderate_failures=3) if metrics else balance_score
 
         for metric in metrics:
             if metric.score >= 80:
-                strengths.append(f"{metric.name}: {metric.score:.1f}/100")
+                strengths.append(self.get_qualitative_strength_description(metric.name))
             elif metric.score < 60:
-                weaknesses.append(f"{metric.name}: {metric.score:.1f}/100")
+                weaknesses.append(self.get_qualitative_weakness_description(metric.name))
 
         return AnalysisResult(
             analysis_id=str(uuid.uuid4()),

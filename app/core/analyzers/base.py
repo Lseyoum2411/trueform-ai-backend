@@ -9,6 +9,7 @@ class BaseAnalyzer(ABC):
         pass
     
     def calculate_score(self, value: float, min_val: float, max_val: float, reverse: bool = False) -> float:
+        """Legacy method for backward compatibility - returns metric score for tracking purposes."""
         if max_val == min_val:
             return 50.0
         
@@ -18,6 +19,107 @@ class BaseAnalyzer(ABC):
         
         score = max(0, min(100, normalized * 100))
         return round(score, 2)
+    
+    def calculate_penalty_from_metric_score(self, metric_score: float, is_critical: bool = False) -> float:
+        """
+        Convert a metric score (0-100) to a penalty amount based on deviation from professional benchmark (90+).
+        
+        Professional benchmark = 90+ (elite level)
+        - Score >= 90: No penalty (0)
+        - Score 85-89: Minor penalty (-5 to -10)
+        - Score 75-84: Moderate penalty (-15 to -25)
+        - Score 60-74: Severe penalty (-30 to -40)
+        - Score < 60: Critical penalty (-45 to -60)
+        
+        Critical metrics receive 1.5x penalty multiplier.
+        
+        Args:
+            metric_score: Score from 0-100
+            is_critical: If True, applies 1.5x penalty multiplier
+            
+        Returns:
+            Penalty amount (negative value) to subtract from base score of 100
+        """
+        if metric_score >= 90:
+            penalty = 0.0
+        elif metric_score >= 85:
+            # Minor deviation: -5 to -10
+            penalty = -5.0 - ((90 - metric_score) / (90 - 85)) * 5.0
+        elif metric_score >= 75:
+            # Moderate deviation: -15 to -25
+            penalty = -15.0 - ((85 - metric_score) / (85 - 75)) * 10.0
+        elif metric_score >= 60:
+            # Severe deviation: -30 to -40
+            penalty = -30.0 - ((75 - metric_score) / (75 - 60)) * 10.0
+        else:
+            # Critical deviation: -45 to -60
+            penalty = -45.0 - ((60 - metric_score) / 60) * 15.0
+        
+        # Apply critical multiplier
+        if is_critical:
+            penalty *= 1.5
+        
+        return round(penalty, 2)
+    
+    def calculate_overall_score_penalty_based(
+        self,
+        metric_scores: List[float],
+        critical_metrics: List[int] = None,
+        max_critical_failures: int = 2,
+        max_moderate_failures: int = 3
+    ) -> float:
+        """
+        Calculate overall score using penalty-based professional benchmark model.
+        
+        Starts at 100 and applies penalties for each metric deviation from professional standard.
+        
+        Args:
+            metric_scores: List of metric scores (0-100)
+            critical_metrics: List of indices in metric_scores that are critical metrics
+            max_critical_failures: Hard cap threshold - if this many critical failures, cap score
+            max_moderate_failures: Hard cap threshold - if this many moderate failures, cap score
+            
+        Returns:
+            Overall score from 0-100
+        """
+        if not metric_scores:
+            return 50.0
+        
+        if critical_metrics is None:
+            critical_metrics = []
+        
+        # Start at 100 (professional benchmark)
+        base_score = 100.0
+        
+        critical_failures = 0  # Count of metrics < 60
+        moderate_failures = 0  # Count of metrics 60-74
+        catastrophic_failures = 0  # Count of metrics < 50
+        
+        # Apply penalties for each metric
+        for i, score in enumerate(metric_scores):
+            is_critical = i in critical_metrics
+            penalty = self.calculate_penalty_from_metric_score(score, is_critical=is_critical)
+            base_score += penalty
+            
+            # Track failure counts for hard caps
+            if score < 50:
+                catastrophic_failures += 1
+            elif score < 60:
+                critical_failures += 1
+            elif score < 75:
+                moderate_failures += 1
+        
+        # Apply hard caps based on failure counts
+        if catastrophic_failures >= 1:
+            base_score = min(base_score, 50.0)  # Any catastrophic failure caps at 50
+        elif critical_failures >= max_critical_failures:
+            base_score = min(base_score, 60.0)  # 2+ critical failures cap at 60
+        elif moderate_failures >= max_moderate_failures:
+            base_score = min(base_score, 65.0)  # 3+ moderate failures cap at 65
+        
+        # Clamp to 0-100 range
+        final_score = max(0.0, min(100.0, base_score))
+        return round(final_score, 2)
     
     def create_feedback(
         self,
@@ -91,4 +193,47 @@ class BaseAnalyzer(ABC):
         how_to_fix_str = "||".join(how_to_fix) if how_to_fix else ""
         structured_message = f"WHAT_WE_SAW|{what_we_saw}|HOW_TO_FIX|{how_to_fix_str}|WHAT_IT_SHOULD_FEEL_LIKE|{what_it_should_feel_like}|COMMON_MISTAKE|{common_mistake}|SELF_CHECK|{self_check}"
         return FeedbackItem(level=level, message=structured_message, metric=metric)
+    
+    def get_qualitative_strength_description(self, metric_name: str) -> str:
+        """Convert metric name to qualitative strength description (no numeric values)."""
+        # Map metric names to qualitative descriptions
+        descriptions = {
+            "base_stability": "Strong base stability",
+            "vertical_alignment": "Excellent vertical alignment",
+            "release_speed": "Quick release",
+            "shot_rhythm": "Smooth shot rhythm",
+            "elbow_alignment": "Proper elbow alignment",
+            "knee_bend": "Good knee bend",
+            "hip_alignment": "Solid hip alignment",
+            "depth": "Excellent depth",
+            "bar_path": "Straight bar path",
+            "spine_alignment": "Proper spine alignment",
+            "tempo": "Consistent tempo",
+            "weight_transfer": "Strong weight transfer",
+            "hip_rotation": "Excellent hip rotation",
+            "balance": "Good balance",
+            "follow_through": "Complete follow-through",
+        }
+        return descriptions.get(metric_name, f"Strong {metric_name.replace('_', ' ')}")
+    
+    def get_qualitative_weakness_description(self, metric_name: str) -> str:
+        """Convert metric name to qualitative weakness description (no numeric values)."""
+        descriptions = {
+            "base_stability": "Base stability needs improvement",
+            "vertical_alignment": "Vertical alignment needs work",
+            "release_speed": "Release speed can improve",
+            "shot_rhythm": "Shot rhythm needs refinement",
+            "elbow_alignment": "Elbow alignment needs correction",
+            "knee_bend": "Knee bend requires attention",
+            "hip_alignment": "Hip alignment needs work",
+            "depth": "Depth needs improvement",
+            "bar_path": "Bar path needs correction",
+            "spine_alignment": "Spine alignment requires attention",
+            "tempo": "Tempo consistency needs work",
+            "weight_transfer": "Weight transfer can improve",
+            "hip_rotation": "Hip rotation needs development",
+            "balance": "Balance requires attention",
+            "follow_through": "Follow-through needs completion",
+        }
+        return descriptions.get(metric_name, f"{metric_name.replace('_', ' ').title()} needs improvement")
 
