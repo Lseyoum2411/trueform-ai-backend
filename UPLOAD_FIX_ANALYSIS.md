@@ -244,5 +244,8 @@ If you change parameter names, update:
 **Fix:** `-F "video=@file.mp4"` instead of `-F "file=@file.mp4"`
 
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 3cec07eb73eb7a9d41527c45e27aa974b9b882ec

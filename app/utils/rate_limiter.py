@@ -62,5 +62,8 @@ def get_active_count() -> int:
     return len(_active_analyses)
 
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 3cec07eb73eb7a9d41527c45e27aa974b9b882ec
