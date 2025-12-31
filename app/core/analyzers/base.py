@@ -236,4 +236,67 @@ class BaseAnalyzer(ABC):
             "follow_through": "Follow-through needs completion",
         }
         return descriptions.get(metric_name, f"{metric_name.replace('_', ' ').title()} needs improvement")
+    
+    def consolidate_weight_transfer_feedback(self, feedback_list: List[FeedbackItem]) -> List[FeedbackItem]:
+        """
+        Remove duplicate weight transfer feedback items.
+        Ensures only ONE feedback item related to weight transfer exists in the list.
+        
+        Weight transfer concepts that should be consolidated:
+        - weight_transfer, weight_shift, back-to-front loading
+        - balance transition, pressure_shift, center_of_mass movement
+        - hip_rotation (when combined with weight transfer concepts, especially in batting)
+        
+        Args:
+            feedback_list: List of FeedbackItem objects
+            
+        Returns:
+            Filtered list with at most one weight transfer feedback item
+        """
+        weight_transfer_metrics = {
+            "weight_transfer", "weight_shift", "balance_transition",
+            "pressure_shift", "center_of_mass", "back_to_front_loading"
+        }
+        
+        # Track weight transfer related feedback
+        weight_transfer_items = []
+        other_items = []
+        has_weight_transfer_metric = False
+        
+        for item in feedback_list:
+            metric = getattr(item, 'metric', None) or ""
+            metric_lower = metric.lower() if metric else ""
+            
+            # Check if this is weight transfer related
+            is_weight_transfer = (
+                metric in weight_transfer_metrics or
+                (metric and "weight" in metric_lower and "transfer" in metric_lower)
+            )
+            
+            if is_weight_transfer:
+                weight_transfer_items.append(item)
+                has_weight_transfer_metric = True
+            # Also check hip_rotation if we already have weight transfer (they overlap in batting)
+            elif metric == "hip_rotation" and has_weight_transfer_metric:
+                # Skip hip_rotation if we already have weight_transfer feedback
+                continue
+            else:
+                other_items.append(item)
+        
+        # Keep only the first/primary weight transfer item if multiple exist
+        if weight_transfer_items:
+            # Prefer items with "weight_transfer" metric over others
+            primary_item = None
+            for item in weight_transfer_items:
+                metric = getattr(item, 'metric', None) or ""
+                if metric == "weight_transfer":
+                    primary_item = item
+                    break
+            
+            if not primary_item:
+                primary_item = weight_transfer_items[0]  # Use first one if no exact match
+            
+            return [primary_item] + other_items
+        
+        return feedback_list
 

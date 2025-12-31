@@ -38,6 +38,9 @@ class TrackFieldAnalyzer(BaseAnalyzer):
             "general"
         ))
 
+        # Consolidate duplicate weight transfer feedback (remove duplicate weight transfer items)
+        feedback = self.consolidate_weight_transfer_feedback(feedback)
+
         return AnalysisResult(
             analysis_id=str(uuid.uuid4()),
             video_id="",

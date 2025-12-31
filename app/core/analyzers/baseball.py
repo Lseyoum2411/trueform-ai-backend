@@ -81,6 +81,9 @@ class BaseballAnalyzer(BaseAnalyzer):
             elif metric.score < 60:
                 weaknesses.append(self.get_qualitative_weakness_description(metric.name))
         
+        # Consolidate duplicate weight transfer feedback (remove hip_rotation feedback if weight_transfer exists)
+        feedback = self.consolidate_weight_transfer_feedback(feedback)
+        
         return AnalysisResult(
             analysis_id=str(uuid.uuid4()),
             video_id="",
@@ -327,7 +330,11 @@ class BaseballAnalyzer(BaseAnalyzer):
         return score
     
     def _analyze_batting_hip_rotation(self, landmarks_list: List[Dict], angles_list: List[Dict], metrics: List, feedback: List) -> float:
-        """Analyze hip rotation toward pitcher for batting."""
+        """
+        Analyze hip rotation toward pitcher for batting.
+        NOTE: For batting, hip rotation is part of weight transfer, so feedback is suppressed
+        to avoid duplicate weight transfer feedback. The metric is still tracked for scoring.
+        """
         if not landmarks_list or len(landmarks_list) < 5:
             return 50.0
         
@@ -350,12 +357,8 @@ class BaseballAnalyzer(BaseAnalyzer):
         score = round(rotation_score, 2)
         metrics.append(self.create_metric("hip_rotation", score, value=round(max_separation, 3)))
         
-        if score < 60:
-            feedback.append(self.create_feedback(
-                "warning",
-                "Rotate your hips toward the pitcher during the swing for more power.",
-                "hip_rotation"
-            ))
+        # DO NOT generate feedback for hip_rotation in batting - weight_transfer feedback already covers this
+        # Hip rotation is part of the weight transfer mechanism, so including it would create duplicate feedback
         
         return score
     
