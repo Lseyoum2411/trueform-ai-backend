@@ -692,25 +692,41 @@ class GolfAnalyzer(BaseAnalyzer):
             unit="normalized"
         ))
         
-        if score >= 85:
-            feedback.append(self.create_feedback(
-                "info",
-                f"{self.shot_type.capitalize()} swing: Excellent stance width for {self.shot_type} shot.",
-                "stance_width"
-            ))
-        elif score < 60:
-            if self.shot_type == "driver":
-                feedback.append(self.create_feedback(
+        # Only provide feedback if stance width is suboptimal (score < 60)
+        # Make it binary: too narrow, too wide, or optimal (no feedback if optimal)
+        if score < 60:
+            is_too_narrow = avg_stance_width < self.stance_width_ideal
+            
+            if is_too_narrow:
+                # Stance is too narrow - needs to widen
+                feedback.append(self.create_actionable_feedback(
                     "warning",
-                    "Driver swing: Stance too narrow. Widen stance for better stability and power.",
-                    "stance_width"
+                    "stance_width",
+                    "Your stance is too narrow, reducing stability and limiting power generation.",
+                    "A narrow stance makes it harder to maintain balance during rotation and reduces your ability to generate power. Widening your stance creates a more stable base that supports your swing mechanics.",
+                    [
+                        "Set your feet slightly wider than shoulder-width",
+                        "Feel pressure evenly through both feet, especially the inside of your trail foot",
+                        "You should feel stable enough to rotate without swaying or stepping"
+                    ],
+                    "",
+                    "Wide and stable"
                 ))
             else:
-                feedback.append(self.create_feedback(
+                # Stance is too wide - needs to narrow
+                feedback.append(self.create_actionable_feedback(
                     "warning",
-                    "Iron swing: Stance too wide. Narrow stance slightly for better control and precision.",
-                    "stance_width"
+                    "stance_width",
+                    "Your stance is too wide, restricting hip rotation and weight transfer.",
+                    "An overly wide stance limits your ability to rotate your hips effectively and can restrict weight transfer. A more athletic, shoulder-width stance allows for better mobility and rotation.",
+                    [
+                        "Bring your feet closer to shoulder-width",
+                        "Feel athletic and mobile, not stretched or locked"
+                    ],
+                    "",
+                    "Athletic base"
                 ))
+        # If score >= 60, no stance width feedback is shown (optimal or acceptable)
         
         return score
     
