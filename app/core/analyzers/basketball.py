@@ -104,9 +104,24 @@ class BasketballAnalyzer(BaseAnalyzer):
             elif metric.score < 60:
                 weaknesses.append(self.get_qualitative_weakness_description(metric.name))
         
+        # Detect number of shot attempts for context-aware feedback
+        num_attempts = len(self._detect_shot_attempts(pose_data))
+        
         # Validate and deduplicate feedback
         feedback = self.validate_feedback(feedback)
         feedback = self.deduplicate_feedback_by_metric(feedback)
+        
+        # Remove "between attempts" language if only one attempt
+        feedback = self._remove_multi_attempt_language(feedback, num_attempts)
+        
+        # Link causally related issues (e.g., release_point and shot_arc)
+        feedback = self._link_causal_feedback(feedback, metrics)
+        
+        # Limit high-priority feedback to ONE maximum
+        feedback = self._limit_high_priority_feedback(feedback, metrics)
+        
+        # Ensure score-feedback consistency (adjust tone based on overall score)
+        feedback = self._adjust_feedback_for_score(feedback, overall_score)
         
         return AnalysisResult(
             analysis_id=str(uuid.uuid4()),
@@ -1445,6 +1460,206 @@ class BasketballAnalyzer(BaseAnalyzer):
             raw_data={},
             created_at=datetime.now(),
         )
+    
+    def _limit_high_priority_feedback(self, feedback: List[FeedbackItem], metrics: List[MetricScore]) -> List[FeedbackItem]:
+        """
+        Limit high-priority (critical level) feedback to MAXIMUM ONE per analysis.
+        Select the issue with the greatest deviation from ideal (lowest score).
+        Downgrade all other critical items to warning.
+        """
+        # Map metrics by name for quick lookup
+        metric_scores = {m.name: m.score for m in metrics}
+        
+        # Find all critical-level feedback
+        critical_items = []
+        other_items = []
+        
+        for item in feedback:
+            if getattr(item, 'level', '') == 'critical':
+                metric_name = getattr(item, 'metric', None)
+                metric_score = metric_scores.get(metric_name, 100) if metric_name else 100
+                critical_items.append((item, metric_score))
+            else:
+                other_items.append(item)
+        
+        # If no critical items or only one, return as-is
+        if len(critical_items) <= 1:
+            return feedback
+        
+        # Sort by metric score (lowest = worst = highest priority)
+        critical_items.sort(key=lambda x: x[1])
+        
+        # Keep only the worst one as critical, downgrade rest to warning
+        worst_item, worst_score = critical_items[0]
+        downgraded_items = []
+        
+        for item, score in critical_items[1:]:
+            # Downgrade to warning by creating new feedback item with warning level
+            # Parse the message to maintain structure
+            message = getattr(item, 'message', '')
+            metric = getattr(item, 'metric', None)
+            
+            # Create new warning-level item (parsing will be handled in service layer)
+            # For now, we'll modify the level field if it exists
+            new_item = FeedbackItem(
+                level='warning',
+                message=message,
+                metric=metric
+            )
+            downgraded_items.append(new_item)
+        
+        # Return: worst critical item + downgraded items + other items
+        return [worst_item] + downgraded_items + other_items
+    
+    def _remove_multi_attempt_language(self, feedback: List[FeedbackItem], num_attempts: int) -> List[FeedbackItem]:
+        """
+        Remove references to 'between attempts', 'inconsistent', 'variation' etc.
+        if only one attempt was analyzed. Replace with single-attempt phrasing.
+        Preserves structured message format (OBSERVATION|IMPACT|etc.)
+        """
+        if num_attempts >= 2:
+            return feedback  # Multiple attempts - keep multi-attempt language
+        
+        # Single attempt - update feedback to remove multi-attempt references
+        updated_feedback = []
+        for item in feedback:
+            message = getattr(item, 'message', '')
+            
+            # Skip if it's not structured feedback (e.g., error messages)
+            if 'OBSERVATION|' not in message and 'POSITIVE|' not in message:
+                updated_feedback.append(item)
+                continue
+            
+            # Parse structured message
+            parts = message.split('|')
+            if len(parts) < 2:
+                updated_feedback.append(item)
+                continue
+            
+            # Find OBSERVATION section and update it
+            updated_parts = []
+            i = 0
+            while i < len(parts):
+                if parts[i] == 'OBSERVATION' and i + 1 < len(parts):
+                    obs_text = parts[i + 1]
+                    # Remove multi-attempt language from observation
+                    obs_lower = obs_text.lower()
+                    if 'between attempts' in obs_lower:
+                        obs_text = obs_text.replace('between attempts', 'in this shot').replace('Between attempts', 'In this shot')
+                    if 'across attempts' in obs_lower:
+                        obs_text = obs_text.replace('across attempts', 'in this shot').replace('Across attempts', 'In this shot')
+                    if 'variation between' in obs_lower:
+                        obs_text = obs_text.replace('variation between', 'form variation').replace('Variation between', 'Form variation')
+                    if 'inconsistent' in obs_lower and 'this shot' not in obs_lower:
+                        # Add context if talking about inconsistency
+                        if not obs_text.lower().startswith('based on') and not obs_text.lower().startswith('this'):
+                            obs_text = f"Based on this single shot, {obs_text.lower()}"
+                    
+                    updated_parts.append(parts[i])  # OBSERVATION
+                    updated_parts.append(obs_text)
+                    i += 2
+                else:
+                    updated_parts.append(parts[i])
+                    i += 1
+            
+            if updated_parts != parts:
+                updated_message = '|'.join(updated_parts)
+                new_item = FeedbackItem(
+                    level=getattr(item, 'level', 'warning'),
+                    message=updated_message,
+                    metric=getattr(item, 'metric', None)
+                )
+                updated_feedback.append(new_item)
+            else:
+                updated_feedback.append(item)
+        
+        return updated_feedback
+    
+    def _link_causal_feedback(self, feedback: List[FeedbackItem], metrics: List[MetricScore]) -> List[FeedbackItem]:
+        """
+        Link causally related issues into single explanations.
+        Example: release_point (cause) → shot_arc (effect)
+        """
+        metric_scores = {m.name: m.score for m in metrics}
+        
+        # Define causal relationships: (cause_metric, effect_metric, combined_message_template)
+        causal_links = [
+            ('release_point', 'shot_arc', 'Your flatter arc is primarily caused by releasing the ball from a lower position than optimal.'),
+            ('elbow_alignment', 'release_point', 'Your elbow flare contributes to the lower release point observed.'),
+        ]
+        
+        linked_feedback = []
+        linked_metrics = set()
+        
+        for cause_metric, effect_metric, combined_msg_template in causal_links:
+            cause_item = None
+            effect_item = None
+            
+            # Find items for both metrics
+            for item in feedback:
+                metric = getattr(item, 'metric', None)
+                if metric == cause_metric:
+                    cause_item = item
+                elif metric == effect_metric:
+                    effect_item = item
+            
+            # If both exist and both are issues (not positive feedback), combine them
+            if cause_item and effect_item:
+                cause_score = metric_scores.get(cause_metric, 100)
+                effect_score = metric_scores.get(effect_metric, 100)
+                
+                # Only link if both are problematic (score < 75)
+                if cause_score < 75 and effect_score < 75:
+                    # Create combined feedback item
+                    # Use the worse-scoring metric's level
+                    combined_level = cause_item.level if cause_score < effect_score else effect_item.level
+                    combined_metric = cause_metric  # Use cause as primary
+                    
+                    # Create structured combined message
+                    combined_message = f"OBSERVATION|{combined_msg_template}|IMPACT|This limits shot arc and makes it easier for defenders to contest.|HOW_TO_FIX|Focus on raising your release point by fully extending your elbow and finishing high||Increase upward force from your legs||Hold your follow-through high|DRILL|High-release form shooting with exaggerated follow-through. Make multiple shots focusing on full arm extension.|CUE|Reach and release high"
+                    
+                    combined_item = FeedbackItem(
+                        level=combined_level,
+                        message=combined_message,
+                        metric=combined_metric
+                    )
+                    
+                    linked_feedback.append(combined_item)
+                    linked_metrics.add(cause_metric)
+                    linked_metrics.add(effect_metric)
+                    continue
+        
+        # Add non-linked items
+        for item in feedback:
+            metric = getattr(item, 'metric', None)
+            if metric not in linked_metrics:
+                linked_feedback.append(item)
+        
+        return linked_feedback if linked_feedback else feedback
+    
+    def _adjust_feedback_for_score(self, feedback: List[FeedbackItem], overall_score: float) -> List[FeedbackItem]:
+        """
+        Ensure feedback tone matches overall score.
+        Scores 65-75: Include strengths + 1 primary correction, avoid overwhelming athlete.
+        """
+        if overall_score >= 75:
+            # Higher scores: keep as-is, might already have positive feedback
+            return feedback
+        
+        if 65 <= overall_score < 75:
+            # Mid-range: ensure we don't overwhelm - limit critical issues
+            # Limit to max 2-3 total feedback items for improvement
+            issue_items = [item for item in feedback if getattr(item, 'level', '') in ['critical', 'warning']]
+            positive_items = [item for item in feedback if getattr(item, 'level', '') == 'info']
+            
+            if len(issue_items) > 3:
+                # Keep only the worst 3 issues, downgrade rest
+                issue_items = issue_items[:3]
+            
+            return positive_items + issue_items
+        
+        # Lower scores (< 65): keep all issues, they need comprehensive feedback
+        return feedback
 
 
 
