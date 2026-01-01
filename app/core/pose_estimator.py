@@ -231,7 +231,11 @@ class PoseEstimator:
                     if frame_count % sample_rate == 0:
                         # STEP 3: Normalize orientation BEFORE MediaPipe (only place rotation happens)
                         # Rotate frame to correct orientation so MediaPipe processes upright frames
+                        # This is a TRUE pixel rotation - frame is physically rotated, not metadata-dependent
                         frame_normalized = self._rotate_frame_if_needed(frame, rotation)
+                        
+                        # Capture actual normalized frame dimensions after rotation (for landmark coordinate conversion)
+                        normalized_frame_height, normalized_frame_width = frame_normalized.shape[:2]
                         
                         # Convert BGR to RGB before processing
                         frame_rgb = cv2.cvtColor(frame_normalized, cv2.COLOR_BGR2RGB)
@@ -272,16 +276,17 @@ class PoseEstimator:
                                     )
                             
                             # STEP 5: Keep landmarks in normalized coordinate space (NO inverse transform)
-                            # MediaPipe processed the normalized (rotated) frame, so landmarks are already
-                            # in the correct coordinate space relative to the normalized dimensions.
-                            # The browser will auto-apply rotation metadata when displaying, so landmarks
-                            # in normalized space will match the displayed video orientation.
+                            # MediaPipe processed the normalized (rotated) frame, so landmarks are in
+                            # the normalized coordinate space relative to normalized_frame_width/height.
+                            # Landmarks are stored as normalized coordinates (0-1) relative to the normalized frame.
+                            # Frontend should use video.videoWidth/videoHeight (which reflect browser's displayed dimensions)
+                            # to convert landmarks to pixels: x_px = landmark.x * video.videoWidth, y_px = landmark.y * video.videoHeight
                             
                             # Calculate joint angles from landmarks (in normalized space)
                             angles = self.get_joint_angles(landmarks)
                             pose_data.append({
                                 "timestamp": timestamp,  # Timestamp for frontend sync
-                                "landmarks": landmarks,  # Landmarks in normalized coordinate space
+                                "landmarks": landmarks,  # Landmarks in normalized coordinate space (0-1) relative to normalized frame
                                 "angles": angles,
                                 "frame_number": frame_count,  # Keep for debugging
                             })
