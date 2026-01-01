@@ -365,4 +365,59 @@ class BaseAnalyzer(ABC):
                 unique_feedback.append(item)
         
         return unique_feedback
+    
+    def validate_feedback(self, feedback_list: List[FeedbackItem]) -> List[FeedbackItem]:
+        """
+        Remove invalid, vague, or contradictory feedback items.
+        
+        Filters out:
+        - Vague "either/or" statements (e.g., "either A or B")
+        - Contradictory statements
+        - Placeholder/empty feedback
+        - Feedback with low confidence indicators
+        
+        Args:
+            feedback_list: List of FeedbackItem objects
+            
+        Returns:
+            Filtered list with only valid, specific feedback
+        """
+        valid_feedback = []
+        
+        for item in feedback_list:
+            message = getattr(item, 'message', '') or ''
+            message_lower = message.lower()
+            
+            # Check for vague "either/or" patterns
+            if 'either' in message_lower and 'or' in message_lower:
+                # Check if it's a vague statement (not a valid "either X or Y" where both are specific)
+                # Vague: "either too close or too far" (doesn't specify which)
+                # Valid: "either forward lean or backward lean" (specific directions)
+                vague_patterns = [
+                    'either too',
+                    'either not',
+                    'either close or far',
+                    'either forward or backward',
+                    "couldn't determine",
+                    "couldn't tell",
+                    "unable to determine"
+                ]
+                if any(pattern in message_lower for pattern in vague_patterns):
+                    logger.warning(f"Skipping vague feedback: {message[:100]}")
+                    continue
+            
+            # Check for contradictory statements
+            if "but it couldn't tell" in message_lower or "but couldn't determine" in message_lower:
+                logger.warning(f"Skipping contradictory feedback: {message[:100]}")
+                continue
+            
+            # Check for empty or placeholder feedback
+            if not message or message.strip() in ['TODO', 'PLACEHOLDER', 'TBD'] or 'placeholder' in message_lower:
+                logger.warning(f"Skipping placeholder feedback: {message[:100]}")
+                continue
+            
+            # All checks passed - keep this feedback
+            valid_feedback.append(item)
+        
+        return valid_feedback
 

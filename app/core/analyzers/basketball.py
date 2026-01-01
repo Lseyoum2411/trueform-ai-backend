@@ -104,7 +104,8 @@ class BasketballAnalyzer(BaseAnalyzer):
             elif metric.score < 60:
                 weaknesses.append(self.get_qualitative_weakness_description(metric.name))
         
-        # Remove any duplicate feedback items by metric name
+        # Validate and deduplicate feedback
+        feedback = self.validate_feedback(feedback)
         feedback = self.deduplicate_feedback_by_metric(feedback)
         
         return AnalysisResult(
@@ -126,34 +127,131 @@ class BasketballAnalyzer(BaseAnalyzer):
             return 50.0
         
         stability_scores = []
+        spacing_ratios = []
+        
         for landmarks in landmarks_list:
-            if "left_ankle" in landmarks and "right_ankle" in landmarks:
-                ankle_distance = abs(landmarks["left_ankle"][0] - landmarks["right_ankle"][0])
-                ideal_width = 0.15
-                deviation = abs(ankle_distance - ideal_width)
-                stability = max(0, 100 - (deviation * 500))
+            # Check if we have all required landmarks with sufficient visibility
+            required_landmarks = ["left_ankle", "right_ankle", "left_shoulder", "right_shoulder"]
+            if not all(k in landmarks for k in required_landmarks):
+                continue
+            
+            # Check visibility (if available)
+            left_ankle_vis = landmarks.get("left_ankle", {}).get("visibility", 1.0) if isinstance(landmarks.get("left_ankle"), dict) else 1.0
+            right_ankle_vis = landmarks.get("right_ankle", {}).get("visibility", 1.0) if isinstance(landmarks.get("right_ankle"), dict) else 1.0
+            left_shoulder_vis = landmarks.get("left_shoulder", {}).get("visibility", 1.0) if isinstance(landmarks.get("left_shoulder"), dict) else 1.0
+            right_shoulder_vis = landmarks.get("right_shoulder", {}).get("visibility", 1.0) if isinstance(landmarks.get("right_shoulder"), dict) else 1.0
+            
+            # Skip if visibility is too low (not confident in measurements)
+            if min(left_ankle_vis, right_ankle_vis, left_shoulder_vis, right_shoulder_vis) < 0.7:
+                continue
+            
+            # Extract coordinates (handle both tuple/list and dict formats)
+            left_ankle = landmarks["left_ankle"]
+            right_ankle = landmarks["right_ankle"]
+            left_shoulder = landmarks["left_shoulder"]
+            right_shoulder = landmarks["right_shoulder"]
+            
+            # Get x coordinates (normalized 0-1)
+            left_ankle_x = left_ankle[0] if isinstance(left_ankle, (list, tuple)) else left_ankle.get("x", 0)
+            right_ankle_x = right_ankle[0] if isinstance(right_ankle, (list, tuple)) else right_ankle.get("x", 0)
+            left_shoulder_x = left_shoulder[0] if isinstance(left_shoulder, (list, tuple)) else left_shoulder.get("x", 0)
+            right_shoulder_x = right_shoulder[0] if isinstance(right_shoulder, (list, tuple)) else right_shoulder.get("x", 0)
+            
+            # Calculate distances
+            foot_width = abs(right_ankle_x - left_ankle_x)
+            shoulder_width = abs(right_shoulder_x - left_shoulder_x)
+            
+            # Calculate ratio of foot spacing to shoulder width
+            if shoulder_width > 0.01:  # Avoid division by zero
+                spacing_ratio = foot_width / shoulder_width
+                spacing_ratios.append(spacing_ratio)
+                
+                # Optimal range: 1.0-1.3x shoulder width for basketball shooting
+                if 1.0 <= spacing_ratio <= 1.3:
+                    stability = 95
+                elif spacing_ratio < 0.8:
+                    # Too narrow
+                    stability = max(0, 100 - (0.8 - spacing_ratio) * 200)
+                elif spacing_ratio < 1.0:
+                    # Slightly narrow
+                    stability = max(0, 100 - (1.0 - spacing_ratio) * 100)
+                elif spacing_ratio <= 1.5:
+                    # Slightly wide
+                    stability = max(0, 100 - (spacing_ratio - 1.3) * 100)
+                else:
+                    # Too wide
+                    stability = max(0, 100 - (spacing_ratio - 1.5) * 200)
+                
                 stability_scores.append(stability)
         
-        score = np.mean(stability_scores) if stability_scores else 50.0
-        metrics.append(self.create_metric("base_stability", score, value=round(score, 1)))
+        if not stability_scores:
+            return 50.0
+        
+        score = np.mean(stability_scores)
+        avg_spacing_ratio = np.mean(spacing_ratios) if spacing_ratios else 0
+        metrics.append(self.create_metric("base_stability", score, value=round(avg_spacing_ratio, 2), unit="shoulder-width ratio"))
         
         if score >= 85:
-            feedback.append(self.create_feedback("info", "Excellent base stability — solid foundation.", "base_stability"))
+            feedback.append(self.create_feedback("info", "Excellent base stability — solid foundation with optimal stance width.", "base_stability"))
             strengths.append("Strong base stability")
         elif score < 60:
-            feedback.append(self.create_actionable_feedback(
-                "warning",
-                "base_stability",
-                "Your feet are positioned too close together or too far apart.",
-                "An improper stance width reduces balance and power transfer from your legs to your shot.",
-                [
-                    "Place your feet directly under your shoulders with toes pointing forward",
-                    "Feel your weight evenly distributed on both feet before you shoot",
-                    "Maintain this width throughout your entire shooting motion"
-                ],
-                "Stance-width form shooting from close range. Check foot position before each shot. Make multiple shots focusing only on base width.",
-                "Shoulder width base"
-            ))
+            # Determine specific issue based on average spacing ratio
+            if avg_spacing_ratio < 1.0:
+                feedback.append(self.create_actionable_feedback(
+                    "warning",
+                    "base_stability",
+                    "Your stance is too narrow, limiting stability and power generation.",
+                    "A narrow base reduces balance and makes it harder to generate consistent power from your legs to your shot.",
+                    [
+                        "Widen your base to shoulder-width or slightly wider for better balance",
+                        "Place your feet directly under your shoulders with toes pointing forward",
+                        "Feel your weight evenly distributed on both feet before you shoot"
+                    ],
+                    "Stance-width form shooting from close range. Check foot position before each shot. Make multiple shots focusing only on base width.",
+                    "Wider base"
+                ))
+            else:  # avg_spacing_ratio > 1.3
+                feedback.append(self.create_actionable_feedback(
+                    "warning",
+                    "base_stability",
+                    "Your stance is too wide, restricting upward power transfer.",
+                    "An overly wide base limits vertical force generation and can reduce shooting consistency.",
+                    [
+                        "Bring your feet slightly closer to shoulder-width to optimize vertical force generation",
+                        "Aim for feet positioned directly under your shoulders or slightly wider",
+                        "Maintain this width throughout your entire shooting motion"
+                    ],
+                    "Stance-width form shooting from close range. Check foot position before each shot. Make multiple shots focusing only on base width.",
+                    "Optimal width"
+                ))
+        else:
+            # Score 60-84: acceptable but could improve
+            if avg_spacing_ratio < 1.0:
+                feedback.append(self.create_actionable_feedback(
+                    "warning",
+                    "base_stability",
+                    "Your stance could be slightly wider for optimal balance.",
+                    "A slightly wider base improves stability and power transfer.",
+                    [
+                        "Widen your base to match shoulder-width for better balance",
+                        "Feel your weight evenly distributed on both feet"
+                    ],
+                    "Stance-width form shooting from close range. Make multiple shots focusing on base width.",
+                    "Wider base"
+                ))
+            else:
+                feedback.append(self.create_actionable_feedback(
+                    "warning",
+                    "base_stability",
+                    "Your stance could be slightly narrower for optimal power transfer.",
+                    "A slightly narrower base can improve vertical force generation.",
+                    [
+                        "Bring your feet slightly closer to shoulder-width",
+                        "Maintain optimal width throughout your shooting motion"
+                    ],
+                    "Stance-width form shooting from close range. Make multiple shots focusing on base width.",
+                    "Optimal width"
+                ))
         
         return score
     
@@ -162,28 +260,86 @@ class BasketballAnalyzer(BaseAnalyzer):
             return 50.0
         
         alignment_scores = []
+        lean_offsets = []  # Track lean direction and magnitude
+        
         for landmarks in landmarks_list:
-            if all(k in landmarks for k in ["nose", "left_hip", "right_hip", "left_ankle", "right_ankle"]):
-                hip_center_x = (landmarks["left_hip"][0] + landmarks["right_hip"][0]) / 2
-                ankle_center_x = (landmarks["left_ankle"][0] + landmarks["right_ankle"][0]) / 2
-                nose_x = landmarks["nose"][0]
+            if not all(k in landmarks for k in ["nose", "left_hip", "right_hip"]):
+                continue
+            
+            # Check visibility if available
+            nose_vis = landmarks.get("nose", {}).get("visibility", 1.0) if isinstance(landmarks.get("nose"), dict) else 1.0
+            left_hip_vis = landmarks.get("left_hip", {}).get("visibility", 1.0) if isinstance(landmarks.get("left_hip"), dict) else 1.0
+            right_hip_vis = landmarks.get("right_hip", {}).get("visibility", 1.0) if isinstance(landmarks.get("right_hip"), dict) else 1.0
+            
+            # Skip if visibility is too low
+            if min(nose_vis, left_hip_vis, right_hip_vis) < 0.7:
+                continue
+            
+            # Extract coordinates
+            nose = landmarks["nose"]
+            left_hip = landmarks["left_hip"]
+            right_hip = landmarks["right_hip"]
+            
+            # Get coordinates (handle both tuple/list and dict formats)
+            nose_x = nose[0] if isinstance(nose, (list, tuple)) else nose.get("x", 0)
+            nose_y = nose[1] if isinstance(nose, (list, tuple)) else nose.get("y", 0)
+            left_hip_x = left_hip[0] if isinstance(left_hip, (list, tuple)) else left_hip.get("x", 0)
+            left_hip_y = left_hip[1] if isinstance(left_hip, (list, tuple)) else left_hip.get("y", 0)
+            right_hip_x = right_hip[0] if isinstance(right_hip, (list, tuple)) else right_hip.get("x", 0)
+            right_hip_y = right_hip[1] if isinstance(right_hip, (list, tuple)) else right_hip.get("y", 0)
+            
+            # Calculate hip center
+            hip_center_x = (left_hip_x + right_hip_x) / 2
+            hip_center_y = (left_hip_y + right_hip_y) / 2
+            
+            # Calculate lean (horizontal offset from hip to nose)
+            lean_offset = nose_x - hip_center_x
+            
+            # Normalize by body height (approximate - distance from hip to nose)
+            body_height = abs(hip_center_y - nose_y)
+            if body_height > 0.01:  # Avoid division by zero
+                lean_ratio = abs(lean_offset) / body_height
+                lean_offsets.append(lean_offset)  # Store signed offset to determine direction
                 
-                vertical_deviation = abs(nose_x - hip_center_x) + abs(hip_center_x - ankle_center_x)
-                alignment = max(0, 100 - (vertical_deviation * 300))
+                # Calculate alignment score based on lean ratio
+                if lean_ratio < 0.05:  # Less than 5% lean is excellent
+                    alignment = 95
+                elif lean_ratio < 0.10:  # 5-10% is acceptable
+                    alignment = 85
+                elif lean_ratio < 0.15:  # 10-15% is moderate
+                    alignment = 70
+                else:  # >15% is problematic
+                    alignment = max(0, 100 - (lean_ratio - 0.15) * 400)
+                
                 alignment_scores.append(alignment)
         
-        score = np.mean(alignment_scores) if alignment_scores else 50.0
-        metrics.append(self.create_metric("vertical_alignment", score, value=round(score, 1)))
+        if not alignment_scores:
+            return 50.0
+        
+        score = np.mean(alignment_scores)
+        avg_lean_offset = np.mean(lean_offsets) if lean_offsets else 0
+        avg_lean_ratio = abs(avg_lean_offset) / 0.2 if lean_offsets else 0  # Approximate body height
+        
+        metrics.append(self.create_metric("vertical_alignment", score, value=round(avg_lean_ratio * 100, 1), unit="% lean"))
         
         if score >= 85:
-            feedback.append(self.create_feedback("info", "Perfect vertical alignment — body stacked correctly.", "vertical_alignment"))
+            if avg_lean_ratio < 0.05:
+                feedback.append(self.create_feedback("info", "Perfect vertical alignment — body stacked correctly with excellent balance.", "vertical_alignment"))
+            else:
+                direction = "forward" if avg_lean_offset > 0 else "backward"
+                feedback.append(self.create_feedback("info", f"Good balance with slight {direction} lean that doesn't affect shot consistency.", "vertical_alignment"))
         elif score < 60:
+            # Determine specific direction and magnitude
+            direction = "forward" if avg_lean_offset > 0 else "backward"
+            magnitude = "significantly" if avg_lean_ratio > 0.15 else "noticeably"
+            
             feedback.append(self.create_actionable_feedback(
                 "warning",
                 "vertical_alignment",
-                "Your body is leaning forward or backward instead of staying straight.",
+                f"Your torso leans {magnitude} {direction} during the shot.",
                 "Leaning reduces balance and makes it harder to generate consistent power from your legs.",
                 [
+                    "Focus on maintaining a more upright position to improve consistency and accuracy",
                     "Feel your head stacked directly over your shoulders",
                     "Keep your hips directly under your shoulders with no forward or backward lean",
                     "Drive straight up through your legs instead of leaning to create power"
@@ -191,55 +347,201 @@ class BasketballAnalyzer(BaseAnalyzer):
                 "Vertical alignment form shooting from close range. Use a mirror to check your posture. Hold the start position briefly before each shot. Make multiple shots.",
                 "Stay stacked"
             ))
+        else:
+            # Score 60-84: moderate issue
+            direction = "forward" if avg_lean_offset > 0 else "backward"
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "vertical_alignment",
+                f"Your body has a noticeable {direction} lean that could be improved.",
+                "Reducing lean improves balance and power transfer from your legs.",
+                [
+                    "Feel your head stacked directly over your shoulders",
+                    "Keep your hips directly under your shoulders",
+                    "Drive straight up through your legs"
+                ],
+                "Vertical alignment form shooting from close range. Use a mirror to check your posture. Make multiple shots.",
+                "Stay stacked"
+            ))
         
+        return score
+    
+    def _detect_shot_attempts(self, pose_data: List[Dict]) -> List[Dict]:
+        """
+        Detect individual shot attempts in the video by finding release points.
+        Returns list of shot attempt segments (start_frame, end_frame, release_frame).
+        """
+        if len(pose_data) < 10:
+            return []
+        
+        shot_attempts = []
+        wrist_positions = []
+        
+        # Track wrist vertical position to find release points (wrist moving upward then downward)
+        for i, frame in enumerate(pose_data):
+            landmarks = frame.get("landmarks", {})
+            if "right_wrist" in landmarks:
+                wrist = landmarks["right_wrist"]
+                wrist_y = wrist[1] if isinstance(wrist, (list, tuple)) else wrist.get("y", 0)
+                wrist_positions.append((i, wrist_y))
+        
+        if len(wrist_positions) < 10:
+            return []
+        
+        # Find local minima (release points - wrist at highest point)
+        for i in range(5, len(wrist_positions) - 5):
+            current_y = wrist_positions[i][1]
+            # Check if this is a local maximum (wrist at highest point before release)
+            is_peak = all(wrist_positions[j][1] <= current_y for j in range(max(0, i-5), i)) and \
+                     all(wrist_positions[j][1] <= current_y for j in range(i+1, min(len(wrist_positions), i+5)))
+            
+            if is_peak:
+                # Found a potential release point - estimate shot attempt boundaries
+                start_frame = max(0, i - 15)  # ~0.5 seconds before release
+                end_frame = min(len(pose_data) - 1, i + 10)  # ~0.3 seconds after release
+                shot_attempts.append({
+                    "start": start_frame,
+                    "end": end_frame,
+                    "release": i
+                })
+        
+        # If no clear shots detected, assume single shot for entire video
+        if not shot_attempts:
+            shot_attempts.append({
+                "start": 0,
+                "end": len(pose_data) - 1,
+                "release": len(pose_data) // 2
+            })
+        
+        return shot_attempts
+    
+    def _calculate_shot_timing(self, pose_data: List[Dict], shot_attempt: Dict) -> float:
+        """Calculate timing from gather to release for a single shot."""
+        start_idx = shot_attempt["start"]
+        release_idx = shot_attempt["release"]
+        
+        # Estimate timing based on frame indices (assuming ~30fps)
+        frame_count = release_idx - start_idx
+        timing = frame_count * 0.033  # seconds
+        
+        return timing
+    
+    def _analyze_single_shot_timing(self, pose_data: List[Dict], shot_attempt: Dict, metrics: List, feedback: List, strengths: List) -> float:
+        """Analyze timing of a single shot attempt."""
+        timing = self._calculate_shot_timing(pose_data, shot_attempt)
+        
+        # Optimal range: 0.3-0.5 seconds from gather to release
+        if 0.3 <= timing <= 0.5:
+            score = 90
+            feedback.append(self.create_feedback("info", "Your release timing is in the optimal range for quick, effective shooting.", "shot_rhythm"))
+            strengths.append("Optimal release timing")
+        elif timing > 0.5:
+            score = max(0, 100 - (timing - 0.5) * 100)
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "shot_rhythm",
+                "Your release is slower than optimal.",
+                "A slower release gives defenders more time to contest and reduces shooting efficiency.",
+                [
+                    "Work on a quicker motion from gather to release",
+                    "Start your upward motion with the ball already set near your shooting pocket",
+                    "Eliminate any pause between knee bend and arm extension",
+                    "Keep the ball moving continuously upward from start to release"
+                ],
+                "One-motion form shooting from close to mid-range. Make multiple shots focusing on speed.",
+                "One smooth motion"
+            ))
+        else:  # timing < 0.3
+            score = max(0, 100 - (0.3 - timing) * 100)
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "shot_rhythm",
+                "Your release may be too rushed.",
+                "A rushed release can reduce accuracy and consistency.",
+                [
+                    "Ensure you have full control before releasing",
+                    "Maintain smooth, controlled motion throughout",
+                    "Balance speed with control"
+                ],
+                "Controlled-release form shooting from close range. Focus on smooth motion. Make multiple shots.",
+                "Control and speed"
+            ))
+        
+        score = round(score, 2)
+        metrics.append(self.create_metric("shot_rhythm", score, value=round(timing, 3), unit="seconds"))
         return score
     
     def _analyze_shot_rhythm(self, pose_data: List[Dict], metrics: List, feedback: List, strengths: List) -> float:
         if len(pose_data) < 10:
             return 50.0
         
-        frame_times = [i * 0.033 for i in range(len(pose_data))]
-        motion_velocity = []
+        # Detect number of shot attempts in video
+        shot_attempts = self._detect_shot_attempts(pose_data)
         
-        for i in range(1, len(pose_data)):
-            prev_landmarks = pose_data[i-1].get("landmarks", {})
-            curr_landmarks = pose_data[i].get("landmarks", {})
-            
-            if "right_wrist" in prev_landmarks and "right_wrist" in curr_landmarks:
-                velocity = np.sqrt(
-                    (curr_landmarks["right_wrist"][0] - prev_landmarks["right_wrist"][0])**2 +
-                    (curr_landmarks["right_wrist"][1] - prev_landmarks["right_wrist"][1])**2
-                )
-                motion_velocity.append(velocity)
+        if len(shot_attempts) < 2:
+            # Only one shot detected - analyze single shot timing instead of rhythm consistency
+            return self._analyze_single_shot_timing(pose_data, shot_attempts[0] if shot_attempts else {"start": 0, "end": len(pose_data)-1, "release": len(pose_data)//2}, metrics, feedback, strengths)
         
-        if not motion_velocity:
+        # Multiple shots detected - analyze rhythm consistency
+        rhythm_timings = []
+        for attempt in shot_attempts:
+            timing = self._calculate_shot_timing(pose_data, attempt)
+            rhythm_timings.append(timing)
+        
+        if not rhythm_timings:
             return 50.0
         
-        velocity_variance = np.var(motion_velocity)
-        ideal_variance = 0.001
-        rhythm_score = max(0, 100 - (abs(velocity_variance - ideal_variance) * 50000))
+        # Calculate consistency (standard deviation of timings)
+        if len(rhythm_timings) > 1:
+            std_dev = np.std(rhythm_timings)
+            mean_timing = np.mean(rhythm_timings)
+        else:
+            std_dev = 0
+            mean_timing = rhythm_timings[0]
         
-        score = round(rhythm_score, 2)
-        metrics.append(self.create_metric("shot_rhythm", score, value=round(velocity_variance, 4), unit="variance"))
-        
-        if score >= 85:
-            feedback.append(self.create_feedback("info", "Perfect one-motion shot — Curry-level smoothness.", "shot_rhythm"))
-            strengths.append("Elite shot rhythm")
-        elif score < 60:
+        # Score based on consistency (lower std_dev = more consistent = higher score)
+        if std_dev < 0.05:
+            score = 95
+            feedback.append(self.create_feedback("info", "Excellent consistency in timing across multiple shots.", "shot_rhythm"))
+            strengths.append("Elite shot rhythm consistency")
+        elif std_dev < 0.10:
+            score = 85
+            feedback.append(self.create_feedback("info", "Good consistency in shot timing across attempts.", "shot_rhythm"))
+        elif std_dev < 0.15:
+            score = 70
             feedback.append(self.create_actionable_feedback(
                 "warning",
                 "shot_rhythm",
-                "Your shooting motion has inconsistent timing between attempts.",
+                "Your shot timing varies moderately between attempts.",
                 "Varying rhythm makes it harder to develop muscle memory and repeat your shot under pressure.",
                 [
+                    "Focus on developing a consistent, repeatable rhythm",
                     "Start your upward motion with the ball already set near your shooting pocket",
                     "Eliminate any pause between knee bend and arm extension",
                     "Keep the ball moving continuously upward from start to release"
                 ],
-                "One-motion form shooting from close to mid-range. Make multiple shots without stopping the ball at any point during your motion.",
+                "One-motion form shooting from close to mid-range. Make multiple shots focusing on consistent timing.",
+                "One smooth motion"
+            ))
+        else:
+            score = max(0, 100 - (std_dev - 0.15) * 200)
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "shot_rhythm",
+                "Your shot timing varies significantly between attempts.",
+                "Inconsistent rhythm makes it harder to develop muscle memory and repeat your shot under pressure.",
+                [
+                    "Focus on developing a consistent, repeatable rhythm",
+                    "Practice the same timing on every shot",
+                    "Start your upward motion with the ball already set near your shooting pocket",
+                    "Eliminate any pause between knee bend and arm extension"
+                ],
+                "One-motion form shooting from close to mid-range. Make multiple shots focusing on consistent timing.",
                 "One smooth motion"
             ))
         
+        score = round(score, 2)
+        metrics.append(self.create_metric("shot_rhythm", score, value=round(std_dev, 3), unit="std dev (seconds)"))
         return score
     
     def _analyze_one_motion_flow(self, angles_list: List[Dict], metrics: List, feedback: List) -> float:
@@ -479,33 +781,103 @@ class BasketballAnalyzer(BaseAnalyzer):
             return 50.0
         
         alignment_scores = []
+        lean_offsets = []  # Track lean direction and magnitude
+        
         for landmarks in landmarks_list:
-            if all(k in landmarks for k in ["nose", "left_hip", "right_hip", "left_ankle", "right_ankle"]):
-                hip_center_x = (landmarks["left_hip"][0] + landmarks["right_hip"][0]) / 2
-                ankle_center_x = (landmarks["left_ankle"][0] + landmarks["right_ankle"][0]) / 2
-                nose_x = landmarks["nose"][0]
+            if not all(k in landmarks for k in ["nose", "left_hip", "right_hip"]):
+                continue
+            
+            # Check visibility if available
+            nose_vis = landmarks.get("nose", {}).get("visibility", 1.0) if isinstance(landmarks.get("nose"), dict) else 1.0
+            left_hip_vis = landmarks.get("left_hip", {}).get("visibility", 1.0) if isinstance(landmarks.get("left_hip"), dict) else 1.0
+            right_hip_vis = landmarks.get("right_hip", {}).get("visibility", 1.0) if isinstance(landmarks.get("right_hip"), dict) else 1.0
+            
+            # Skip if visibility is too low
+            if min(nose_vis, left_hip_vis, right_hip_vis) < 0.7:
+                continue
+            
+            # Extract coordinates
+            nose = landmarks["nose"]
+            left_hip = landmarks["left_hip"]
+            right_hip = landmarks["right_hip"]
+            
+            # Get coordinates (handle both tuple/list and dict formats)
+            nose_x = nose[0] if isinstance(nose, (list, tuple)) else nose.get("x", 0)
+            nose_y = nose[1] if isinstance(nose, (list, tuple)) else nose.get("y", 0)
+            left_hip_x = left_hip[0] if isinstance(left_hip, (list, tuple)) else left_hip.get("x", 0)
+            left_hip_y = left_hip[1] if isinstance(left_hip, (list, tuple)) else left_hip.get("y", 0)
+            right_hip_x = right_hip[0] if isinstance(right_hip, (list, tuple)) else right_hip.get("x", 0)
+            right_hip_y = right_hip[1] if isinstance(right_hip, (list, tuple)) else right_hip.get("y", 0)
+            
+            # Calculate hip center
+            hip_center_x = (left_hip_x + right_hip_x) / 2
+            hip_center_y = (left_hip_y + right_hip_y) / 2
+            
+            # Calculate lean (horizontal offset from hip to nose)
+            lean_offset = nose_x - hip_center_x
+            
+            # Normalize by body height
+            body_height = abs(hip_center_y - nose_y)
+            if body_height > 0.01:
+                lean_ratio = abs(lean_offset) / body_height
+                lean_offsets.append(lean_offset)
                 
-                vertical_deviation = abs(nose_x - hip_center_x) + abs(hip_center_x - ankle_center_x)
-                alignment = max(0, 100 - (vertical_deviation * 300))
+                # Calculate alignment score
+                if lean_ratio < 0.05:
+                    alignment = 95
+                elif lean_ratio < 0.10:
+                    alignment = 85
+                elif lean_ratio < 0.15:
+                    alignment = 70
+                else:
+                    alignment = max(0, 100 - (lean_ratio - 0.15) * 400)
+                
                 alignment_scores.append(alignment)
         
-        score = np.mean(alignment_scores) if alignment_scores else 50.0
-        metrics.append(self.create_metric("vertical_alignment", score, value=round(score, 1)))
+        if not alignment_scores:
+            return 50.0
+        
+        score = np.mean(alignment_scores)
+        avg_lean_offset = np.mean(lean_offsets) if lean_offsets else 0
+        avg_lean_ratio = abs(avg_lean_offset) / 0.2 if lean_offsets else 0
+        
+        metrics.append(self.create_metric("vertical_alignment", score, value=round(avg_lean_ratio * 100, 1), unit="% lean"))
         
         if score >= 85:
             feedback.append(self.create_feedback("info", "Perfect vertical alignment — body stacked correctly for balanced shot.", "vertical_alignment"))
         elif score < 60:
+            # Determine specific direction and magnitude
+            direction = "forward" if avg_lean_offset > 0 else "backward"
+            magnitude = "significantly" if avg_lean_ratio > 0.15 else "noticeably"
+            
             feedback.append(self.create_actionable_feedback(
                 "warning",
                 "vertical_alignment",
-                "Your body is leaning, drifting, or twisting during shots off the dribble instead of staying balanced.",
+                f"Your body leans {magnitude} {direction} during shots off the dribble instead of staying balanced.",
                 "Leaning reduces balance and makes it harder to generate consistent power. Body control and balance allow the same mechanics at game speed.",
                 [
+                    f"Focus on maintaining a more upright position to reduce {direction} lean",
                     "Feel your head stacked directly over your shoulders throughout the shot",
                     "Keep your hips directly under your shoulders with no forward, backward, or side lean",
                     "Drive straight up through your legs instead of leaning to create power"
                 ],
                 "One-dribble pull-up with focus on body control. Check alignment in mirror before each shot. Make 20 shots emphasizing balance.",
+                "Stay stacked"
+            ))
+        else:
+            # Score 60-84: moderate issue
+            direction = "forward" if avg_lean_offset > 0 else "backward"
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "vertical_alignment",
+                f"Your body has a noticeable {direction} lean during shots off the dribble that could be improved.",
+                "Reducing lean improves balance and power transfer from your legs.",
+                [
+                    "Feel your head stacked directly over your shoulders",
+                    "Keep your hips directly under your shoulders",
+                    "Drive straight up through your legs"
+                ],
+                "One-dribble pull-up with focus on body control. Check alignment in mirror. Make 20 shots emphasizing balance.",
                 "Stay stacked"
             ))
         
