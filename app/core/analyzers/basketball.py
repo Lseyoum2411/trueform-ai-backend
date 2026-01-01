@@ -1399,19 +1399,35 @@ class BasketballAnalyzer(BaseAnalyzer):
         if score >= 85:
             feedback.append(self.create_feedback("info", "Good wrist snap — proper release motion.", "wrist_snap"))
         elif score < 60:
-            feedback.append(self.create_actionable_feedback(
-                "warning",
-                "wrist_snap",
-                "Your wrist snap is either too weak or too aggressive at release.",
-                "An improper wrist snap affects ball rotation and backspin, leading to inconsistent shot results and poor ball control.",
-                [
-                    "Feel your wrist snap forward naturally as the ball leaves your fingers",
-                    "Let your fingers point down toward the floor at the end of your follow-through",
-                    "Feel consistent backspin on the ball when it leaves your hand"
-                ],
-                "Wrist-snap form shooting from close range. Focus on feeling the snap at release. Make multiple shots concentrating on wrist action.",
-                "Snap it"
-            ))
+            # Determine specific issue: too weak or too aggressive based on actual measurement
+            if snap_intensity < ideal_snap:
+                feedback.append(self.create_actionable_feedback(
+                    "warning",
+                    "wrist_snap",
+                    "Your wrist snap is too weak at release.",
+                    "A weak wrist snap reduces ball rotation and backspin, leading to inconsistent shot results and poor ball control.",
+                    [
+                        "Increase wrist snap intensity - feel your wrist snap forward more forcefully as the ball leaves your fingers",
+                        "Let your fingers point down toward the floor at the end of your follow-through",
+                        "Focus on generating consistent backspin on the ball when it leaves your hand"
+                    ],
+                    "Wrist-snap form shooting from close range. Focus on feeling a stronger snap at release. Make multiple shots concentrating on wrist action.",
+                    "Snap it stronger"
+                ))
+            else:  # snap_intensity > ideal_snap
+                feedback.append(self.create_actionable_feedback(
+                    "warning",
+                    "wrist_snap",
+                    "Your wrist snap is too aggressive at release.",
+                    "An overly aggressive wrist snap can affect ball rotation and control, leading to inconsistent shot results.",
+                    [
+                        "Reduce wrist snap intensity - feel your wrist snap forward naturally, not forcefully, as the ball leaves your fingers",
+                        "Let your fingers point down toward the floor at the end of your follow-through",
+                        "Focus on smooth, controlled wrist motion rather than an aggressive snap"
+                    ],
+                    "Wrist-snap form shooting from close range. Focus on feeling a controlled snap at release. Make multiple shots concentrating on smooth wrist action.",
+                    "Smooth snap"
+                ))
         
         return score
     
