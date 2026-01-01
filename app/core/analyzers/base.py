@@ -412,7 +412,14 @@ class BaseAnalyzer(ABC):
                 continue
             
             # Check for empty or placeholder feedback
-            if not message or message.strip() in ['TODO', 'PLACEHOLDER', 'TBD'] or 'placeholder' in message_lower:
+            placeholder_patterns = [
+                'todo', 'placeholder', 'tbd', 'coming soon', 'in development',
+                'detailed analysis coming', 'analysis completed', 'not yet implemented'
+            ]
+            if not message or message.strip() in ['TODO', 'PLACEHOLDER', 'TBD']:
+                logger.warning(f"Skipping placeholder feedback: {message[:100]}")
+                continue
+            if any(pattern in message_lower for pattern in placeholder_patterns):
                 logger.warning(f"Skipping placeholder feedback: {message[:100]}")
                 continue
             
