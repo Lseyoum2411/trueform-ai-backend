@@ -1089,42 +1089,170 @@ class BasketballAnalyzer(BaseAnalyzer):
         
         return score
     
+    def _find_pocket_position_frame(self, landmarks_list: List[Dict]) -> Dict:
+        """
+        Find the frame where ball is in shooting pocket (before upward motion starts).
+        This is typically the frame where shooting hand is at its lowest point (highest y value) before release.
+        """
+        if len(landmarks_list) < 5:
+            return None
+        
+        pocket_frame = None
+        max_hand_y = -1  # Track highest y value (lowest hand position)
+        
+        # Look through early frames (excluding last few which are release/follow-through)
+        search_frames = landmarks_list[:max(1, len(landmarks_list) - 3)]
+        
+        for frame in search_frames:
+            landmarks = frame.get("landmarks", {})
+            if not all(k in landmarks for k in ["right_wrist", "right_elbow"]):
+                continue
+            
+            # Check visibility
+            wrist_vis = landmarks.get("right_wrist", {}).get("visibility", 1.0) if isinstance(landmarks.get("right_wrist"), dict) else 1.0
+            if wrist_vis < 0.7:
+                continue
+            
+            # Get wrist position (shooting hand)
+            wrist = landmarks["right_wrist"]
+            wrist_y = wrist[1] if isinstance(wrist, (list, tuple)) else wrist.get("y", 0)
+            
+            # Find frame with lowest hand position (highest y value) - this is the pocket position
+            if wrist_y > max_hand_y:
+                max_hand_y = wrist_y
+                pocket_frame = frame
+        
+        return pocket_frame if pocket_frame else (landmarks_list[len(landmarks_list) // 3] if landmarks_list else None)
+    
     def _analyze_shooting_pocket(self, landmarks_list: List[Dict], metrics: List, feedback: List) -> float:
+        """
+        Analyze shooting pocket position - must be specific about too high vs too low.
+        Optimal pocket: Ball held between waist and chin, at upper chest level (60-80% between hip and chin).
+        """
         if not landmarks_list:
             return 50.0
         
-        pocket_scores = []
-        for landmarks in landmarks_list:
-            if all(k in landmarks for k in ["right_elbow", "right_wrist", "right_shoulder"]):
-                elbow_y = landmarks["right_elbow"][1]
-                wrist_y = landmarks["right_wrist"][1]
-                shoulder_y = landmarks["right_shoulder"][1]
-                
-                pocket_height = abs(elbow_y - shoulder_y)
-                ideal_pocket = 0.15
-                deviation = abs(pocket_height - ideal_pocket)
-                pocket_score = max(0, 100 - (deviation * 400))
-                pocket_scores.append(pocket_score)
+        # Find the frame where ball is in shooting pocket
+        pocket_frame = self._find_pocket_position_frame(landmarks_list)
+        if not pocket_frame:
+            return 50.0
         
-        score = np.mean(pocket_scores) if pocket_scores else 50.0
-        metrics.append(self.create_metric("shooting_pocket", score, value=round(score, 1)))
+        landmarks = pocket_frame.get("landmarks", {})
+        if not all(k in landmarks for k in ["nose", "right_shoulder", "left_shoulder", "right_hip", "left_hip", "right_wrist"]):
+            return 50.0
         
-        if score >= 85:
-            feedback.append(self.create_feedback("info", "Good shooting pocket position.", "shooting_pocket"))
-        elif score < 60:
+        # Check visibility
+        required_keys = ["nose", "right_shoulder", "left_shoulder", "right_hip", "left_hip", "right_wrist"]
+        visibilities = []
+        for key in required_keys:
+            landmark = landmarks[key]
+            vis = landmark.get("visibility", 1.0) if isinstance(landmark, dict) else 1.0
+            visibilities.append(vis)
+        
+        if min(visibilities) < 0.7:
+            return 50.0
+        
+        # Extract coordinates
+        nose = landmarks["nose"]
+        right_shoulder = landmarks["right_shoulder"]
+        left_shoulder = landmarks["left_shoulder"]
+        right_hip = landmarks["right_hip"]
+        left_hip = landmarks["left_hip"]
+        right_wrist = landmarks["right_wrist"]
+        
+        # Get y coordinates (handle both tuple/list and dict formats)
+        nose_y = nose[1] if isinstance(nose, (list, tuple)) else nose.get("y", 0)
+        shoulder_y = ((right_shoulder[1] if isinstance(right_shoulder, (list, tuple)) else right_shoulder.get("y", 0)) +
+                     (left_shoulder[1] if isinstance(left_shoulder, (list, tuple)) else left_shoulder.get("y", 0))) / 2
+        hip_y = ((right_hip[1] if isinstance(right_hip, (list, tuple)) else right_hip.get("y", 0)) +
+                (left_hip[1] if isinstance(left_hip, (list, tuple)) else left_hip.get("y", 0))) / 2
+        wrist_y = right_wrist[1] if isinstance(right_wrist, (list, tuple)) else right_wrist.get("y", 0)
+        
+        # Approximate chin position (slightly below nose)
+        chin_y = nose_y + 0.02
+        
+        # Calculate pocket height as percentage between hip and chin
+        body_height = abs(hip_y - chin_y)
+        if body_height <= 0.01:  # Avoid division by zero
+            return 50.0
+        
+        # Calculate pocket position ratio (0.0 = at hip, 1.0 = at chin)
+        # Lower y value = higher position on screen
+        pocket_position_ratio = (hip_y - wrist_y) / body_height
+        
+        # Optimal range: 0.6-0.8 (60-80% between hip and chin, favoring upper chest level)
+        if 0.6 <= pocket_position_ratio <= 0.8:
+            score = 95
+            feedback.append(self.create_feedback("info", "Your shooting pocket is positioned optimally at upper chest level for quick, powerful release.", "shooting_pocket"))
+        elif pocket_position_ratio < 0.4:
+            # TOO LOW - ball below chest, near waist
+            score = 60
             feedback.append(self.create_actionable_feedback(
                 "warning",
                 "shooting_pocket",
-                "Your shooting pocket is positioned too high or too low.",
-                "An incorrect pocket position disrupts timing and makes it harder to generate consistent power and rhythm.",
+                "Your shooting pocket is positioned too low, below optimal chest level.",
+                "A low starting position disrupts timing and makes it harder to generate consistent power and rhythm from your legs to your shot.",
                 [
+                    "Raise your starting position to upper chest level",
                     "Set the ball just outside your dominant shoulder with your elbow at 90 degrees",
                     "Keep the ball above your waist and below your chin",
                     "Feel your forearm stay vertical before you start your upward motion"
                 ],
-                "Stationary pocket check shooting from close range. Hold pocket position briefly, then shoot. Make multiple shots focusing on correct pocket height.",
-                "Pocket clean"
+                "Stationary pocket check shooting from close range. Hold pocket position briefly at upper chest level, then shoot. Make multiple shots focusing on correct pocket height.",
+                "Upper chest pocket"
             ))
+        elif pocket_position_ratio > 0.85:
+            # TOO HIGH - ball above chest, near face
+            score = 65
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "shooting_pocket",
+                "Your shooting pocket is positioned too high, above optimal chest level.",
+                "A starting position too high disrupts timing and makes it harder to generate power from your legs to your shot.",
+                [
+                    "Lower your starting position to upper chest level",
+                    "The ball should be at shoulder height, not near your face",
+                    "Set the ball just outside your dominant shoulder with your elbow at 90 degrees",
+                    "Feel your forearm stay vertical before you start your upward motion"
+                ],
+                "Stationary pocket check shooting from close range. Hold pocket position briefly at upper chest level, then shoot. Make multiple shots focusing on correct pocket height.",
+                "Upper chest pocket"
+            ))
+        elif pocket_position_ratio < 0.6:
+            # SLIGHTLY LOW
+            score = 75
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "shooting_pocket",
+                "Your shooting pocket is positioned slightly low.",
+                "Raising the starting position slightly will optimize power transfer and timing.",
+                [
+                    "Raise your starting position slightly to upper chest level",
+                    "Aim for the ball at shoulder height, just outside your dominant shoulder",
+                    "Keep your elbow at 90 degrees before starting the upward motion"
+                ],
+                "Stationary pocket check shooting from close range. Make multiple shots focusing on slightly higher starting position.",
+                "Slightly higher"
+            ))
+        else:  # pocket_position_ratio > 0.8 and <= 0.85
+            # SLIGHTLY HIGH
+            score = 78
+            feedback.append(self.create_actionable_feedback(
+                "warning",
+                "shooting_pocket",
+                "Your shooting pocket is positioned slightly high.",
+                "Lowering the starting position slightly will improve consistency and power transfer.",
+                [
+                    "Lower your starting position slightly to upper chest level",
+                    "Keep the ball between chest and chin level, not too close to your face",
+                    "Maintain elbow at 90 degrees before starting the upward motion"
+                ],
+                "Stationary pocket check shooting from close range. Make multiple shots focusing on slightly lower starting position.",
+                "Slightly lower"
+            ))
+        
+        score = round(score, 2)
+        metrics.append(self.create_metric("shooting_pocket", score, value=round(pocket_position_ratio * 100, 1), unit="% from hip to chin"))
         
         return score
     
