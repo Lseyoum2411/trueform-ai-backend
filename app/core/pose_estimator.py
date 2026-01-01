@@ -107,6 +107,92 @@ class PoseEstimator:
             "duration": duration,
         }
     
+    def _detect_video_rotation(self, video_path: str) -> int:
+        """
+        Detect video rotation from metadata.
+        Returns rotation angle in degrees (0, 90, 180, or 270).
+        """
+        try:
+            # Try to read rotation from video metadata using ffprobe
+            import subprocess
+            import json
+            
+            # Use ffprobe to read video rotation metadata
+            cmd = [
+                'ffprobe', '-v', 'quiet', '-print_format', 'json',
+                '-show_streams', '-select_streams', 'v:0', video_path
+            ]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                data = json.loads(result.stdout)
+                streams = data.get('streams', [])
+                if streams:
+                    # Check for rotation tag
+                    tags = streams[0].get('tags', {})
+                    rotation = tags.get('rotate') or tags.get('rotation')
+                    if rotation:
+                        rotation_deg = int(float(rotation))
+                        # Normalize to 0, 90, 180, or 270
+                        rotation_deg = rotation_deg % 360
+                        if rotation_deg in [0, 90, 180, 270]:
+                            logger.info(f"Detected video rotation: {rotation_deg}°")
+                            return rotation_deg
+        except Exception as e:
+            logger.debug(f"Could not detect video rotation (ffprobe may not be available): {e}")
+        
+        return 0
+    
+    def _rotate_frame_if_needed(self, frame: np.ndarray, rotation: int) -> np.ndarray:
+        """
+        Rotate frame if rotation metadata indicates it's needed.
+        This ensures MediaPipe processes frames in the correct orientation.
+        """
+        if rotation == 0:
+            return frame
+        elif rotation == 90:
+            return cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+        elif rotation == 180:
+            return cv2.rotate(frame, cv2.ROTATE_180)
+        elif rotation == 270:
+            return cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        return frame
+    
+    def _apply_rotation_to_landmarks(self, landmarks: Dict, rotation: int, original_width: int, original_height: int) -> Dict:
+        """
+        Apply inverse rotation to landmarks to account for frame rotation.
+        
+        If we rotated the frame before MediaPipe, MediaPipe returns landmarks in the rotated
+        coordinate space. We need to transform them back to the original video coordinate space
+        so they match what the browser displays (browser auto-applies rotation metadata).
+        
+        Rotation transforms (normalized coordinates, origin top-left):
+        - 90° CW: (x, y) -> (1-y, x)
+        - 180°: (x, y) -> (1-x, 1-y)
+        - 270° CW: (x, y) -> (y, 1-x)
+        """
+        if rotation == 0:
+            return landmarks
+        
+        rotated_landmarks = {}
+        for name, (x, y, z) in landmarks.items():
+            # Apply inverse rotation in normalized coordinate space (0-1)
+            if rotation == 90:  # Frame rotated 90° CW, so inverse is 90° CCW: (x, y) -> (y, 1-x)
+                new_x = y
+                new_y = 1.0 - x
+            elif rotation == 180:  # Inverse of 180° is 180°: (x, y) -> (1-x, 1-y)
+                new_x = 1.0 - x
+                new_y = 1.0 - y
+            elif rotation == 270:  # Frame rotated 270° CW (90° CCW), inverse is 90° CW: (x, y) -> (1-y, x)
+                new_x = 1.0 - y
+                new_y = x
+            else:
+                new_x, new_y = x, y
+            
+            rotated_landmarks[name] = (new_x, new_y, z)
+        
+        return rotated_landmarks
+    
     def process_video(self, video_path: str) -> List[Dict]:
         return self.analyze_video(video_path)
     
@@ -133,9 +219,21 @@ class PoseEstimator:
         frame_count = 0
         processed_count = 0
         
+        # Detect video rotation from metadata
+        rotation = self._detect_video_rotation(video_path)
+        
         try:
-            # Get FPS to calculate max frames if needed (limit to ~60 seconds max at 30fps = 1800 frames)
+            # Get FPS to calculate timestamps and max frames
             fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+            width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            
+            # If video is rotated 90/270, swap width/height for landmark transformation
+            if rotation in [90, 270]:
+                landmark_width, landmark_height = height, width
+            else:
+                landmark_width, landmark_height = width, height
+            
             if not max_frames:
                 # Default: limit to 1800 frames (60 seconds at 30fps) to prevent OOM
                 max_frames = int(min(1800, fps * 60))
@@ -156,10 +254,16 @@ class PoseEstimator:
                     if not ret:
                         break
                     
+                    # Calculate timestamp for this frame (in seconds)
+                    timestamp = frame_count / fps if fps > 0 else frame_count * 0.033
+                    
                     # Sample frames based on sample_rate
                     if frame_count % sample_rate == 0:
+                        # Rotate frame if needed (before MediaPipe processing)
+                        frame_rotated = self._rotate_frame_if_needed(frame, rotation)
+                        
                         # Convert BGR to RGB before processing
-                        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                        frame_rgb = cv2.cvtColor(frame_rotated, cv2.COLOR_BGR2RGB)
                         
                         # Process frame with MediaPipe Pose
                         results = pose.process(frame_rgb)
@@ -195,11 +299,20 @@ class PoseEstimator:
                                         landmark.z,
                                     )
                             
+                            # Apply inverse rotation to landmarks if frame was rotated
+                            # This transforms landmarks back to original video coordinate space
+                            if rotation != 0:
+                                landmarks = self._apply_rotation_to_landmarks(
+                                    landmarks, rotation, landmark_width, landmark_height
+                                )
+                            
                             # Calculate joint angles from landmarks
                             angles = self.get_joint_angles(landmarks)
                             pose_data.append({
+                                "timestamp": timestamp,  # Add timestamp for frontend sync
                                 "landmarks": landmarks,
                                 "angles": angles,
+                                "frame_number": frame_count,  # Keep for debugging
                             })
                         
                         processed_count += 1
@@ -214,5 +327,5 @@ class PoseEstimator:
             cap.release()
             del cap
         
-        logger.info(f"Processed {processed_count} frames, extracted {len(pose_data)} frames with pose data")
+        logger.info(f"Processed {processed_count} frames, extracted {len(pose_data)} frames with pose data (rotation: {rotation}°)")
         return pose_data
