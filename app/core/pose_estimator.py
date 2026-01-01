@@ -158,40 +158,6 @@ class PoseEstimator:
             return cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
         return frame
     
-    def _apply_rotation_to_landmarks(self, landmarks: Dict, rotation: int, original_width: int, original_height: int) -> Dict:
-        """
-        Apply inverse rotation to landmarks to account for frame rotation.
-        
-        If we rotated the frame before MediaPipe, MediaPipe returns landmarks in the rotated
-        coordinate space. We need to transform them back to the original video coordinate space
-        so they match what the browser displays (browser auto-applies rotation metadata).
-        
-        Rotation transforms (normalized coordinates, origin top-left):
-        - 90° CW: (x, y) -> (1-y, x)
-        - 180°: (x, y) -> (1-x, 1-y)
-        - 270° CW: (x, y) -> (y, 1-x)
-        """
-        if rotation == 0:
-            return landmarks
-        
-        rotated_landmarks = {}
-        for name, (x, y, z) in landmarks.items():
-            # Apply inverse rotation in normalized coordinate space (0-1)
-            if rotation == 90:  # Frame rotated 90° CW, so inverse is 90° CCW: (x, y) -> (y, 1-x)
-                new_x = y
-                new_y = 1.0 - x
-            elif rotation == 180:  # Inverse of 180° is 180°: (x, y) -> (1-x, 1-y)
-                new_x = 1.0 - x
-                new_y = 1.0 - y
-            elif rotation == 270:  # Frame rotated 270° CW (90° CCW), inverse is 90° CW: (x, y) -> (1-y, x)
-                new_x = 1.0 - y
-                new_y = x
-            else:
-                new_x, new_y = x, y
-            
-            rotated_landmarks[name] = (new_x, new_y, z)
-        
-        return rotated_landmarks
     
     def process_video(self, video_path: str) -> List[Dict]:
         return self.analyze_video(video_path)
@@ -219,20 +185,24 @@ class PoseEstimator:
         frame_count = 0
         processed_count = 0
         
-        # Detect video rotation from metadata
+        # STEP 1: Detect video rotation metadata (normalize once before processing)
         rotation = self._detect_video_rotation(video_path)
         
         try:
             # Get FPS to calculate timestamps and max frames
             fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
-            width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            original_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            original_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             
-            # If video is rotated 90/270, swap width/height for landmark transformation
+            # STEP 2: Determine normalized dimensions (after rotation correction)
+            # After rotating frames, dimensions swap for 90/270 rotations
+            # These are the dimensions MediaPipe will see and landmarks will be relative to
             if rotation in [90, 270]:
-                landmark_width, landmark_height = height, width
+                normalized_width = original_height
+                normalized_height = original_width
             else:
-                landmark_width, landmark_height = width, height
+                normalized_width = original_width
+                normalized_height = original_height
             
             if not max_frames:
                 # Default: limit to 1800 frames (60 seconds at 30fps) to prevent OOM
@@ -259,13 +229,15 @@ class PoseEstimator:
                     
                     # Sample frames based on sample_rate
                     if frame_count % sample_rate == 0:
-                        # Rotate frame if needed (before MediaPipe processing)
-                        frame_rotated = self._rotate_frame_if_needed(frame, rotation)
+                        # STEP 3: Normalize orientation BEFORE MediaPipe (only place rotation happens)
+                        # Rotate frame to correct orientation so MediaPipe processes upright frames
+                        frame_normalized = self._rotate_frame_if_needed(frame, rotation)
                         
                         # Convert BGR to RGB before processing
-                        frame_rgb = cv2.cvtColor(frame_rotated, cv2.COLOR_BGR2RGB)
+                        frame_rgb = cv2.cvtColor(frame_normalized, cv2.COLOR_BGR2RGB)
                         
-                        # Process frame with MediaPipe Pose
+                        # STEP 4: MediaPipe processes normalized (upright) frames
+                        # MediaPipe will return landmarks in the normalized coordinate space
                         results = pose.process(frame_rgb)
                         
                         # Debug logging: log landmark value to verify real processing
@@ -299,18 +271,17 @@ class PoseEstimator:
                                         landmark.z,
                                     )
                             
-                            # Apply inverse rotation to landmarks if frame was rotated
-                            # This transforms landmarks back to original video coordinate space
-                            if rotation != 0:
-                                landmarks = self._apply_rotation_to_landmarks(
-                                    landmarks, rotation, landmark_width, landmark_height
-                                )
+                            # STEP 5: Keep landmarks in normalized coordinate space (NO inverse transform)
+                            # MediaPipe processed the normalized (rotated) frame, so landmarks are already
+                            # in the correct coordinate space relative to the normalized dimensions.
+                            # The browser will auto-apply rotation metadata when displaying, so landmarks
+                            # in normalized space will match the displayed video orientation.
                             
-                            # Calculate joint angles from landmarks
+                            # Calculate joint angles from landmarks (in normalized space)
                             angles = self.get_joint_angles(landmarks)
                             pose_data.append({
-                                "timestamp": timestamp,  # Add timestamp for frontend sync
-                                "landmarks": landmarks,
+                                "timestamp": timestamp,  # Timestamp for frontend sync
+                                "landmarks": landmarks,  # Landmarks in normalized coordinate space
                                 "angles": angles,
                                 "frame_number": frame_count,  # Keep for debugging
                             })
@@ -327,5 +298,13 @@ class PoseEstimator:
             cap.release()
             del cap
         
-        logger.info(f"Processed {processed_count} frames, extracted {len(pose_data)} frames with pose data (rotation: {rotation}°)")
+        logger.info(
+            f"Processed {processed_count} frames, extracted {len(pose_data)} frames with pose data. "
+            f"Original dimensions: {original_width}x{original_height}, "
+            f"Normalized dimensions: {normalized_width}x{normalized_height}, "
+            f"Rotation: {rotation}°"
+        )
+        
+        # Return pose_data with metadata for frontend reference
+        # Frontend should use normalized_width/normalized_height for landmark-to-pixel conversion
         return pose_data
