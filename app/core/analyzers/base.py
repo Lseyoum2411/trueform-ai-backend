@@ -339,8 +339,13 @@ class BaseAnalyzer(ABC):
     
     def deduplicate_feedback_by_metric(self, feedback_list: List[FeedbackItem]) -> List[FeedbackItem]:
         """
-        Remove duplicate feedback items that have the same metric name.
+        Remove duplicate feedback items that have the same metric name or similar titles.
         Ensures only ONE feedback item per metric is returned.
+        
+        Deduplication strategy:
+        1. Exact metric match → keep only first
+        2. Similar titles (e.g., "Vertical Alignment" vs "Vertical alignment needs work") → keep only first
+        3. Prioritize higher severity items if same metric
         
         Args:
             feedback_list: List of FeedbackItem objects
@@ -349,20 +354,78 @@ class BaseAnalyzer(ABC):
             Filtered list with at most one feedback item per metric
         """
         seen_metrics = set()
+        seen_titles = set()
         unique_feedback = []
         
-        for item in feedback_list:
+        # Sort by priority (critical > warning > info) so we keep the most important version
+        priority_order = {"critical": 0, "warning": 1, "info": 2, "error": 0}
+        sorted_feedback = sorted(
+            feedback_list,
+            key=lambda x: priority_order.get(getattr(x, 'level', 'warning'), 1)
+        )
+        
+        for item in sorted_feedback:
             metric = getattr(item, 'metric', None)
+            message = getattr(item, 'message', '') or ''
             
             # Skip items without a metric (keep them as they might be general feedback)
             if not metric:
                 unique_feedback.append(item)
                 continue
             
-            # Only keep the first feedback item for each metric
-            if metric not in seen_metrics:
-                seen_metrics.add(metric)
-                unique_feedback.append(item)
+            # Check for exact metric match
+            if metric in seen_metrics:
+                logger.info(f"Removed duplicate feedback by metric: {metric}")
+                continue
+            
+            # Normalize title from message for comparison
+            # Extract title from structured message or use first part of message
+            title = ""
+            if '|' in message:
+                # Structured message: extract first section
+                parts = message.split('|')
+                if len(parts) >= 2:
+                    title = parts[1].strip()  # First content section
+            else:
+                # Simple message: use first sentence or first 50 chars
+                title = message.split('.')[0].strip()[:50]
+            
+            # Normalize title for comparison (lowercase, remove punctuation)
+            normalized_title = title.lower().strip().replace('_', ' ').replace('-', ' ')
+            # Remove common suffixes like "needs work", "needs improvement", etc.
+            normalized_title = normalized_title.replace(' needs work', '').replace(' needs improvement', '')
+            normalized_title = normalized_title.replace(' can improve', '').replace(' requires attention', '')
+            
+            # Check for similar titles (one contains the other or they're very similar)
+            is_duplicate_title = False
+            for seen_title in seen_titles:
+                # Check if titles are similar (one contains the other or vice versa)
+                if normalized_title in seen_title or seen_title in normalized_title:
+                    # Additional check: if both refer to same metric concept
+                    if len(normalized_title) > 5 and len(seen_title) > 5:  # Avoid matching very short strings
+                        is_duplicate_title = True
+                        logger.info(f"Removed duplicate feedback by similar title: '{title}' (similar to existing)")
+                        break
+            
+            if is_duplicate_title:
+                continue
+            
+            # Not a duplicate - add it
+            seen_metrics.add(metric)
+            if normalized_title:
+                seen_titles.add(normalized_title)
+            unique_feedback.append(item)
+        
+        # Final validation: ensure no duplicates remain
+        final_metrics = [getattr(item, 'metric', None) for item in unique_feedback if getattr(item, 'metric', None)]
+        if len(final_metrics) != len(set(final_metrics)):
+            logger.error("DUPLICATES STILL EXIST AFTER DEDUPLICATION! Applying aggressive deduplication.")
+            # Keep only first occurrence of each metric
+            seen = set()
+            unique_feedback = [
+                item for item in unique_feedback
+                if (metric := getattr(item, 'metric', None)) and metric not in seen and not seen.add(metric)
+            ]
         
         return unique_feedback
     
