@@ -19,6 +19,9 @@ class WaitlistCheckResponse(BaseModel):
     approved: bool
     on_waitlist: bool
 
+class ApproveRequest(BaseModel):
+    email: EmailStr
+
 # Simple file-based storage (use database in production)
 WAITLIST_DIR = "data"
 WAITLIST_FILE = os.path.join(WAITLIST_DIR, "waitlist.json")
@@ -93,11 +96,11 @@ async def list_waitlist():
     return waitlist
 
 @router.post("/waitlist/approve")
-async def approve_user(email: str):
+async def approve_user(request: ApproveRequest):
     """Approve a user (admin only - add auth in production)"""
     waitlist = load_waitlist()
     
-    user_index = next((i for i, item in enumerate(waitlist) if item['email'] == email), None)
+    user_index = next((i for i, item in enumerate(waitlist) if item['email'] == request.email), None)
     
     if user_index is None:
         raise HTTPException(status_code=404, detail="User not found on waitlist")
@@ -107,7 +110,9 @@ async def approve_user(email: str):
     
     save_waitlist(waitlist)
     
-    logger.info(f"Approved user: {email}")
+    logger.info(f"Approved user: {request.email}")
     
     return {"message": "User approved successfully"}
+
+
 
